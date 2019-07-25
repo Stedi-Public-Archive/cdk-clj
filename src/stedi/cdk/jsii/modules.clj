@@ -31,13 +31,6 @@
           (recur))
         nil))))
 
-(comment
-  (load-manifest "core@1.1.0.jsii.tgz")
-  (module-resource-paths)
-
-  ((:set/prop obj) )
-  )
-
 (defn- module [{:keys [module-name module-version module-bundle]}]
   (let [module-proxy (get-proxy-class JsiiModule)]
     (construct-proxy module-proxy module-name module-version module-proxy module-bundle)))

@@ -1,7 +1,7 @@
 (ns stedi.cdk.jsii.client
   (:require [clojure.data.json :as json]
-            [stedi.cdk.jsii.modules :as modules]
-            [clojure.walk :as walk])
+            [clojure.walk :as walk]
+            [stedi.cdk.jsii.modules :as modules])
   (:import (com.fasterxml.jackson.databind ObjectMapper)
            (com.fasterxml.jackson.databind.node ArrayNode)
            (software.amazon.jsii JsiiRuntime JsiiObjectRef)))
@@ -12,48 +12,88 @@
 
 (defonce ^:private loaded-modules (atom #{}))
 
-(defn client
+(defn- client
   []
   (.getClient jsii-runtime))
 
-(defn load-module [module]
+(defn- load-module [module]
   (let [coords [(.getModuleName module) (.getModuleVersion module)]]
     (when-not (@loaded-modules coords)
       (.loadModule (client) module)
       (swap! loaded-modules conj coords))))
 
+;; Load all cdk modules
 (doseq [module (modules/all)]
   (load-module module))
 
-(declare process-response)
-
-(deftype JsiiRecord [obj-ref]
-  clojure.lang.IDeref
-  (deref [_] obj-ref)
-
-  clojure.lang.ILookup
-  (valAt [_ k]
-    (-> (.getPropertyValue (client) obj-ref (name k))
-        (process-response))))
-
-(defn- jsii-record [obj-id]
-  (JsiiRecord. (JsiiObjectRef/fromObjId obj-id)))
-
-(defn- wrap-refs [x]
+(defn deserialize-refs [x]
   (walk/postwalk
     (fn [y]
-      (if-let [obj-id (and (map? y)
-                           (:$jsii.byref y))]
-        (jsii-record obj-id)
+      (if-let [object-id
+               (and (map? y)
+                    (:$jsii.byref y))]
+        (JsiiObjectRef/fromObjId object-id)
         y))
     x))
 
-(defn- process-response [response]
-  (-> response
+(defn serialize-refs [x]
+  (walk/postwalk
+    (fn [y]
+      (if (= JsiiObjectRef (class y))
+        (.toJson y)
+        y))
+    x))
+
+(defn- json-node->edn [json-node]
+  (-> json-node
       (.toString)
       (json/read-str :key-fn keyword)
-      (wrap-refs)))
+      (deserialize-refs)))
 
-(defn $ [fqn property-name]
-  (-> (.getStaticPropertyValue (client) fqn property-name)
-      (process-response)))
+(defn- edn->json-node [data]
+  (->> data
+       (serialize-refs)
+       (.valueToTree object-mapper)))
+
+(defn create-object
+  [fqn initializer-args]
+  (.createObject (client) fqn (map edn->json-node initializer-args)))
+
+(defn delete-object
+  [object-ref]
+  (.deleteObject (client) object-ref))
+
+(defn get-property-value
+  [object-ref property]
+  (-> (.getPropertyValue (client) object-ref property)
+      (json-node->edn)))
+
+;; TODO: find something to test this with
+(defn set-property-value
+  [object-ref property value]
+  (.setPropertyValue (client) object-ref property (edn->json-node value)))
+
+(defn get-static-property-value
+  [fqn property]
+  (-> (.getStaticPropertyValue (client) fqn property)
+      (json-node->edn)))
+
+;; TODO: find something to test this with
+(defn set-static-property-value
+  [fqn property value]
+  (.setStaticPropertyValue (client) fqn property (edn->json-node value)))
+
+(defn call-static-method
+  [fqn method args]
+  (-> (.callStaticMethod (client) fqn method (edn->json-node args))
+      (json-node->edn)))
+
+(defn call-method
+  [object-ref method args]
+  (-> (.callMethod (client) object-ref method (edn->json-node args))
+      (json-node->edn)))
+
+;; TODO: track objects that can be garbage collected
+;; TODO: overrides
+;; TODO: async methods
+;; TODO: callbacks
