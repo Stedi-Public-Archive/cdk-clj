@@ -4,7 +4,8 @@
             [stedi.cdk.jsii.modules :as modules])
   (:import (com.fasterxml.jackson.databind ObjectMapper)
            (com.fasterxml.jackson.databind.node ArrayNode)
-           (software.amazon.jsii JsiiRuntime JsiiObjectRef)))
+           (software.amazon.jsii JsiiRuntime JsiiObjectRef JsiiCallbackHandler)
+           (software.amazon.jsii.api JsiiOverride Callback)))
 
 (defonce ^:private object-mapper (ObjectMapper.))
 
@@ -44,6 +45,14 @@
         y))
     x))
 
+(defn- namify-keys [x]
+  (walk/postwalk
+    (fn [y]
+      (if (map? y)
+        (into {} (map #(update % 0 name)) y)
+        y))
+    x))
+
 (defn- json-node->edn [json-node]
   (-> json-node
       (.toString)
@@ -52,12 +61,21 @@
 
 (defn- edn->json-node [data]
   (->> data
+       (namify-keys)
        (serialize-refs)
        (.valueToTree object-mapper)))
 
+(defn- ->override [{:keys [method property cookie]}]
+  (doto (JsiiOverride.)
+    (.setMethod method)
+    (.setProperty property)
+    (.setCookie cookie)))
+
 (defn create-object
-  [fqn initializer-args]
-  (.createObject (client) fqn (map edn->json-node initializer-args)))
+  ([fqn initializer-args]
+   (.createObject (client) fqn (map edn->json-node initializer-args)))
+  ([fqn initializer-args callbacks]
+   (.createObject (client) fqn (map edn->json-node initializer-args) (map ->override callbacks))))
 
 (defn delete-object
   [object-ref]
@@ -68,7 +86,6 @@
   (-> (.getPropertyValue (client) object-ref property)
       (json-node->edn)))
 
-;; TODO: find something to test this with
 (defn set-property-value
   [object-ref property value]
   (.setPropertyValue (client) object-ref property (edn->json-node value)))
@@ -78,7 +95,6 @@
   (-> (.getStaticPropertyValue (client) fqn property)
       (json-node->edn)))
 
-;; TODO: find something to test this with
 (defn set-static-property-value
   [fqn property value]
   (.setStaticPropertyValue (client) fqn property (edn->json-node value)))
@@ -92,8 +108,3 @@
   [object-ref method args]
   (-> (.callMethod (client) object-ref method (edn->json-node args))
       (json-node->edn)))
-
-;; TODO: track objects that can be garbage collected
-;; TODO: overrides
-;; TODO: async methods
-;; TODO: callbacks
