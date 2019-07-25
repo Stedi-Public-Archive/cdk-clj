@@ -4,6 +4,5 @@
          org.apache.commons/commons-compress {:mvn/version "1.0"}
          org.clojure/data.json               {:mvn/version "0.2.6"}
          software.amazon.jsii/jsii-runtime   {:mvn/version "0.14.2"}
-         
          }
  :aliases {:dev {}}}

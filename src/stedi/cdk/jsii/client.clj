@@ -1,6 +1,6 @@
-(ns stedi.jsii.client
+(ns stedi.cdk.jsii.client
   (:require [clojure.data.json :as json]
-            [stedi.jsii.modules :as modules]
+            [stedi.cdk.jsii.modules :as modules]
             [clojure.walk :as walk])
   (:import (com.fasterxml.jackson.databind ObjectMapper)
            (com.fasterxml.jackson.databind.node ArrayNode)
@@ -57,14 +57,3 @@
 (defn $ [fqn property-name]
   (-> (.getStaticPropertyValue (client) fqn property-name)
       (process-response)))
-
-(defc "@aws-cdk/lambda.Function" clj-function
-  [this props])
-
-(defc "@aws-cdk/core.Stack" my-stack
-  []
-  (lambda ))
-
-(comment
-  (:region (JsiiRecord. (.createObject (client) "@aws-cdk/core.Stack" [nil "foo" {"stackName" nil
-                                                                                  "env"       {"region" "us-west-2"}}]))))

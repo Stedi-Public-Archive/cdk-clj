@@ -1,4 +1,4 @@
-(ns stedi.jsii.modules
+(ns stedi.cdk.jsii.modules
   (:require [clojure.data.json :as json]
             [clojure.edn :as edn]
             [clojure.java.io :as io]
