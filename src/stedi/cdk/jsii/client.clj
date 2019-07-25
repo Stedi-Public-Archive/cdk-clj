@@ -26,7 +26,7 @@
 (doseq [module (modules/all)]
   (load-module module))
 
-(defn deserialize-refs [x]
+(defn- deserialize-refs [x]
   (walk/postwalk
     (fn [y]
       (if-let [object-id
@@ -36,7 +36,7 @@
         y))
     x))
 
-(defn serialize-refs [x]
+(defn- serialize-refs [x]
   (walk/postwalk
     (fn [y]
       (if (= JsiiObjectRef (class y))
