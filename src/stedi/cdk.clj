@@ -20,12 +20,11 @@
     (let [package-ns (-> package (impl/package->ns-sym) (create-ns))
           ns-sym     (-> package-ns (str) (symbol))
           types      (get (client/get-manifest package) "types")]
-      (doseq [[fqn description] types]
-        (let [class-sym* (impl/class-sym fqn)]
+      (doseq [[fqn] types]
+        (let [type-name (impl/type-name fqn)]
           (intern ns-sym
-                  (with-meta class-sym*
-                    {:cdk/description description
-                     :cdk/fqn         fqn})
+                  (with-meta (symbol type-name)
+                    {:cdk/fqn fqn})
                   (impl/wrap-class fqn nil))))
       (alias alias* ns-sym))))
 

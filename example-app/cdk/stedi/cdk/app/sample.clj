@@ -16,4 +16,18 @@
        :environment {"STEDI_LAMBDA_ENTRYPOINT" "stedi.app.sample/handler"}})))
 
 (cdk/defapp app [this]
-  (stack :cdk/create this "DevStack"))
+  (stack :cdk/create this "DevStack"
+         {:env {:region "us-west-2"}}))
+
+(comment
+  (:cdk/props lambda/Code)
+
+  (:cdk/doc-data lambda/Code)
+
+  (app :cdk/browse)
+
+  (stack :cdk/browse)
+
+  :cdk/as-data
+
+  )

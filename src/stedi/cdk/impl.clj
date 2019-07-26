@@ -1,23 +1,47 @@
 (ns stedi.cdk.impl
   (:refer-clojure :exclude [require])
-  (:require [clojure.string :as string]
+  (:require [clojure.java.browse :as browse]
+            [clojure.string :as string]
             [clojure.walk :as walk]
             [stedi.cdk.jsii.client :as client])
   (:import (software.amazon.jsii JsiiObjectRef)))
 
+(defn browse-docs [fqn]
+  (let [sanitized (string/replace fqn "/" "_")]
+    (browse/browse-url (format "https://docs.aws.amazon.com/cdk/api/latest/docs/%s.html"
+                               sanitized))))
+
+(defn type-name [fqn]
+  (last (string/split fqn #"\.")))
+
+(defn module-name [fqn]
+  (first (string/split fqn #"\.")))
+
 (declare wrap-objects unwrap-objects)
+
+(defn doc-data [fqn]
+  (-> fqn
+      (module-name)
+      (client/get-manifest)
+      (get-in ["types" fqn])
+      (walk/keywordize-keys)))
 
 (defn invoke-object
   [cdk-object op & args]
   (assert (keyword? op) "op must be a keyword")
-  (-> (client/call-method (. cdk-object object-ref) (name op) (unwrap-objects args))
-      (wrap-objects)))
+  (case op
+    :cdk/browse (browse-docs (.getFqn (. cdk-object object-ref)))
+    (-> (client/call-method (. cdk-object object-ref) (name op) (unwrap-objects args))
+        (wrap-objects))))
 
 (deftype CDKObject [object-ref]
   clojure.lang.ILookup
   (valAt [_ k]
-    (-> (client/get-property-value object-ref (name k))
-        (wrap-objects)))
+    (case k
+      :cdk/definition (doc-data (.getFqn object-ref))
+
+      (-> (client/get-property-value object-ref (name k))
+          (wrap-objects))))
 
   clojure.lang.IFn
   (invoke [this op]
@@ -58,14 +82,18 @@
                     (when-let [init-fn (:cdk/init overrides)]
                       (apply init-fn obj args)
                       obj))
+      :cdk/browse (browse-docs fqn)
 
       (wrap-objects (client/call-static-method fqn (name op) args)))))
 
 (deftype CDKClass [fqn fqs]
   clojure.lang.ILookup
   (valAt [_ k]
-    (-> (client/get-static-property-value fqn (name k))
-        (wrap-objects)))
+    (case k
+      :cdk/definition (doc-data fqn)
+
+      (-> (client/get-static-property-value fqn (name k))
+          (wrap-objects))))
 
   clojure.lang.IFn
   (invoke [this op]
@@ -87,10 +115,4 @@
   (-> package
       (string/replace "@" "")
       (string/replace "/" ".")
-      (symbol)))
-
-(defn class-sym [fqn]
-  (-> fqn
-      (string/split #"\.")
-      (last)
       (symbol)))
