@@ -1,6 +1,8 @@
 (ns stedi.cdk
   (:refer-clojure :exclude [require])
-  (:require [clojure.walk :as walk]
+  (:require [clojure.data.json :as json]
+            [clojure.java.io :as io]
+            [clojure.walk :as walk]
             [stedi.cdk.impl :as impl]
             [stedi.cdk.jsii.client :as client])
   (:import (software.amazon.jsii JsiiObjectRef)))
@@ -62,12 +64,20 @@
   After declaring itself, the app extension instantiates itself which
   forces cdk validations to occur to streamline the repl-workflow.
 
+  Autogenerates a `cdk.json` file if it does not exist.
+
   Example:
 
   (cdk/defapp app
     [this]
     (stack this \"MyDevStack\" {}))"
   [name args & body]
+  (when-not (.exists (io/file "cdk.json"))
+    (spit "cdk.json"
+          (json/write-str
+            {:app (format "clj -A:dev -m stedi.cdk.main %s"
+                          (str *ns* "/" name))}
+            :escape-slash false)))
   `(do
      (defextension ~name aws-cdk.core/App
        :cdk/init
