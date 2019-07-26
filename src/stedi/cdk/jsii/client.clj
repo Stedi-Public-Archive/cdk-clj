@@ -17,15 +17,20 @@
   []
   (.getClient jsii-runtime))
 
-(defn- load-module [module]
-  (let [coords [(.getModuleName module) (.getModuleVersion module)]]
-    (when-not (@loaded-modules coords)
-      (.loadModule (client) module)
-      (swap! loaded-modules conj coords))))
+(defn- load-module [{:keys [manifest module]}]
+  (when-not (@loaded-modules manifest)
+    (.loadModule (client) module)
+    (swap! loaded-modules conj manifest)))
 
 ;; Load all cdk modules
 (doseq [module (modules/all)]
   (load-module module))
+
+(defn get-manifest
+  [module-name]
+  (->> @loaded-modules
+       (filter (comp #{module-name} #(get % "name")))
+       (first)))
 
 (defn- deserialize-refs [x]
   (walk/postwalk

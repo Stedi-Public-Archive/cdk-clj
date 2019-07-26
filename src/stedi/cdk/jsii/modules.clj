@@ -46,7 +46,8 @@
                   :module-bundle  (str "/" resource-path)}]
     {:props    props
      :module   (module props)
-     :deps     (get-deps manifest)}))
+     :deps     (get-deps manifest)
+     :manifest manifest}))
 
 (defn- topo-sort [modules]
   (->> modules
@@ -64,7 +65,6 @@
                       (into {}))]
     (->> modules*
          (topo-sort)
-         (map modules*)
-         (map :module))))
+         (map modules*))))
 
 (def all (memoize all*))

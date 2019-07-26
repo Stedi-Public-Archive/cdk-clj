@@ -1,5 +1,7 @@
 (ns stedi.cdk
-  (:require [clojure.walk :as walk]
+  (:refer-clojure :exclude [require])
+  (:require [clojure.string :as string]
+            [clojure.walk :as walk]
             [stedi.cdk.jsii.client :as client])
   (:import (software.amazon.jsii JsiiObjectRef)))
 
@@ -48,7 +50,7 @@
   [cdk-class op & args]
   (let [fqs       (. cdk-class fqs)
         fqn       (. cdk-class fqn)
-        overrides (::overrides (meta (resolve fqs)))]
+        overrides (some-> fqs resolve meta ::overrides)]
     (case op
       :cdk/create (let [obj (CDKObject. (client/create-object fqn (unwrap-objects args)))]
                     (when-let [init-fn (:cdk/init overrides)]
@@ -90,3 +92,37 @@
   `(do
      (defc ~name "@aws-cdk/core.App" ~@override+fns)
      (alter-var-root (resolve (quote ~name)) #(% :cdk/create))))
+
+(defn- package->ns-sym [package]
+  (-> package
+      (string/replace "@" "")
+      (string/replace "/" ".")
+      (symbol)))
+
+(defn- class-sym [fqn]
+  (-> fqn
+      (string/split #"\.")
+      (last)
+      (symbol)))
+
+(defmacro describe-data [sym]
+  (some-> sym
+          resolve
+          meta
+          :cdk/description
+          walk/keywordize-keys))
+
+(defmacro require [& package+alias]
+  (doseq [[package alias*] package+alias]
+    (let [package-ns (-> package
+                         (package->ns-sym)
+                         (create-ns))
+          ns-sym     (-> package-ns str symbol)
+          types      (get (client/get-manifest package) "types")]
+      (doseq [[fqn description] types]
+        (let [class-sym* (class-sym fqn)]
+          (intern ns-sym
+                  (with-meta class-sym*
+                    {:cdk/description description})
+                  (wrap-class fqn nil))))
+      (alias alias* ns-sym))))
