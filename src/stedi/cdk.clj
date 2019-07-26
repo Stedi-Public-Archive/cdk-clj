@@ -82,12 +82,3 @@
        :cdk/init
        (fn ~args ~@body))
      (alter-var-root (resolve (quote ~name)) #(% :cdk/create))))
-
-(defmacro describe-data
-  "Given a cdk-class, returns the jsii manifest data for the class."
-  [cdk-class]
-  (some-> cdk-class
-          resolve
-          meta
-          :cdk/description
-          walk/keywordize-keys))
