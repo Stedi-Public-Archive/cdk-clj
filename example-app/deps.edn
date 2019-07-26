@@ -1,0 +1,8 @@
+{:paths   ["src" "classes"]
+ :deps    {org.clojure/clojure {:mvn/version "1.10.1"}
+           stedi/lambda-kit    {:git/url "git@github.com:stediinc/lambda-kit"
+                                :sha     "d2f0bc2c87beab7efff2f78d642699077ea52116"}}
+ :aliases {:dev  {:extra-paths ["cdk"]
+                  :extra-deps  {stedi/cdk-kit {:local/root "../"}}}
+           :pack {:extra-deps {pack/pack.alpha {:git/url "https://github.com/juxt/pack.alpha.git"
+                                                :sha     "2769a6224bfb938e777906ea311b3daf7d2220f5"}}}}}
