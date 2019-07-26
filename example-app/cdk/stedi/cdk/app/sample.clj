@@ -1,21 +1,19 @@
 (ns stedi.cdk.app.sample
   (:require [stedi.cdk :as cdk]))
 
-(cdk/defc code "@aws-cdk/aws-lambda.Code")
+(cdk/require ["@aws-cdk/core" cdk-core]
+             ["@aws-cdk/aws-lambda" lambda])
 
-(cdk/defc runtime "@aws-cdk/aws-lambda.Runtime")
-
-(cdk/defc function "@aws-cdk/aws-lambda.Function")
-
-(cdk/defc stack "@aws-cdk/core.Stack"
+(cdk/defextension stack cdk-core/Stack
   :cdk/init
   (fn [this]
-    (function :cdk/create this "Fn"
-              {:code        (code :asset "./target/app.zip")
-               :handler     "stedi.lambda::handler"
-               :runtime     (:JAVA_8 runtime)
-               :memorySize  2048
-               :environment {"STEDI_LAMBDA_ENTRYPOINT" "stedi.app.sample/handler"}})))
+    (lambda/Function
+      :cdk/create this "Fn"
+      {:code        (lambda/Code :asset "./target/app.zip")
+       :handler     "stedi.lambda::handler"
+       :runtime     (:JAVA_8 lambda/Runtime)
+       :memorySize  2048
+       :environment {"STEDI_LAMBDA_ENTRYPOINT" "stedi.app.sample/handler"}})))
 
 (cdk/defapp app
   :cdk/init
