@@ -9,10 +9,11 @@
 
 (defn- invoke-object
   [cdk-object op & args]
+  (assert (keyword? op) "op must be a keyword")
   (-> (client/call-method (. cdk-object object-ref) (name op) (unwrap-objects args))
       (wrap-objects)))
 
-(deftype CDKObject [object-ref]
+(deftype ^:private CDKObject [object-ref]
   clojure.lang.ILookup
   (valAt [_ k]
     (-> (client/get-property-value object-ref (name k))
@@ -48,6 +49,7 @@
 
 (defn- invoke-class
   [cdk-class op & args]
+  (assert (keyword? op) "op must be a keyword")
   (let [fqs       (. cdk-class fqs)
         fqn       (. cdk-class fqn)
         overrides (some-> fqs resolve meta ::overrides)]
@@ -59,7 +61,7 @@
 
       (wrap-objects (client/call-static-method fqn (name op) args)))))
 
-(deftype CDKClass [fqn fqs]
+(deftype ^:private CDKClass [fqn fqs]
   clojure.lang.ILookup
   (valAt [_ k]
     (-> (client/get-static-property-value fqn (name k))
@@ -81,19 +83,6 @@
 (defn- make-rest-args-optional [x]
   (list* (update (into [] x) 1 conj '& '_)))
 
-;; TODO: this should take a symbol rather than a fqn
-(defmacro defc [name fqn & override+fns]
-  (let [overrides (into {}
-                        (map #(update % 1 make-rest-args-optional))
-                        (apply hash-map override+fns))
-        fqs       (str (str *ns*) "/" (str name))]
-    `(def ~(with-meta name `{::overrides ~overrides}) (wrap-class ~fqn (symbol ~fqs)))))
-
-(defmacro defapp [name & override+fns]
-  `(do
-     (defc ~name "@aws-cdk/core.App" ~@override+fns)
-     (alter-var-root (resolve (quote ~name)) #(% :cdk/create))))
-
 (defn- package->ns-sym [package]
   (-> package
       (string/replace "@" "")
@@ -106,25 +95,42 @@
       (last)
       (symbol)))
 
-(defmacro describe-data [sym]
-  (some-> sym
-          resolve
-          meta
-          :cdk/description
-          walk/keywordize-keys))
+;;------------------------------------------------------------------------------
+;; API
 
 (defmacro require [& package+alias]
   (doseq [[package alias*] package+alias]
     (client/load-module package)
-    (let [package-ns (-> package
-                         (package->ns-sym)
-                         (create-ns))
-          ns-sym     (-> package-ns str symbol)
+    (let [package-ns (-> package (package->ns-sym) (create-ns))
+          ns-sym     (-> package-ns (str) (symbol))
           types      (get (client/get-manifest package) "types")]
       (doseq [[fqn description] types]
         (let [class-sym* (class-sym fqn)]
           (intern ns-sym
                   (with-meta class-sym*
-                    {:cdk/description description})
+                    {:cdk/description description
+                     :cdk/fqn         fqn})
                   (wrap-class fqn nil))))
       (alias alias* ns-sym))))
+
+(require ["@aws-cdk/core" cdk-core])
+
+(defmacro defextension [name cdk-class & override+fns]
+  (let [fqn       (-> cdk-class (resolve) (meta) (:cdk/fqn))
+        overrides (into {}
+                        (map #(update % 1 make-rest-args-optional))
+                        (apply hash-map override+fns))
+        fqs       (str (str *ns*) "/" (str name))]
+    `(def ~(with-meta name `{::overrides ~overrides}) (wrap-class ~fqn (symbol ~fqs)))))
+
+(defmacro defapp [name & override+fns]
+  `(do
+     (defextension ~name aws-cdk.core/App ~@override+fns)
+     (alter-var-root (resolve (quote ~name)) #(% :cdk/create))))
+
+(defmacro describe-data [cdk-class]
+  (some-> cdk-class
+          resolve
+          meta
+          :cdk/description
+          walk/keywordize-keys))
