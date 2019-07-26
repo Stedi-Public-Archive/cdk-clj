@@ -1,134 +1,82 @@
 (ns stedi.cdk
   (:refer-clojure :exclude [require])
-  (:require [clojure.string :as string]
-            [clojure.walk :as walk]
+  (:require [clojure.walk :as walk]
+            [stedi.cdk.impl :as impl]
             [stedi.cdk.jsii.client :as client])
   (:import (software.amazon.jsii JsiiObjectRef)))
 
-(declare wrap-objects unwrap-objects)
+(defmacro require
+  "Require's jsii modules and binds them to an alias. Allows for
+  multiple module requirement bindings.
 
-(defn- invoke-object
-  [cdk-object op & args]
-  (assert (keyword? op) "op must be a keyword")
-  (-> (client/call-method (. cdk-object object-ref) (name op) (unwrap-objects args))
-      (wrap-objects)))
-
-(deftype ^:private CDKObject [object-ref]
-  clojure.lang.ILookup
-  (valAt [_ k]
-    (-> (client/get-property-value object-ref (name k))
-        (wrap-objects)))
-
-  clojure.lang.IFn
-  (invoke [this op]
-    (invoke-object this op))
-  (invoke [this op a]
-    (invoke-object this op a))
-  (invoke [this op a b]
-    (invoke-object this op a b))
-  (invoke [this op a b c]
-    (invoke-object this op a b c)))
-
-(defn- wrap-objects
-  [x]
-  (walk/postwalk
-    (fn [y]
-      (if (= JsiiObjectRef (type y))
-        (CDKObject. y)
-        y))
-    x))
-
-(defn- unwrap-objects
-  [x]
-  (walk/postwalk
-    (fn [y]
-      (if (= CDKObject (type y))
-        (. y object-ref)
-        y))
-    x))
-
-(defn- invoke-class
-  [cdk-class op & args]
-  (assert (keyword? op) "op must be a keyword")
-  (let [fqs       (. cdk-class fqs)
-        fqn       (. cdk-class fqn)
-        overrides (some-> fqs resolve meta ::overrides)]
-    (case op
-      :cdk/create (let [obj (CDKObject. (client/create-object fqn (unwrap-objects args)))]
-                    (when-let [init-fn (:cdk/init overrides)]
-                      (apply init-fn obj args)
-                      obj))
-
-      (wrap-objects (client/call-static-method fqn (name op) args)))))
-
-(deftype ^:private CDKClass [fqn fqs]
-  clojure.lang.ILookup
-  (valAt [_ k]
-    (-> (client/get-static-property-value fqn (name k))
-        (wrap-objects)))
-
-  clojure.lang.IFn
-  (invoke [this op]
-    (invoke-class this op))
-  (invoke [this op a]
-    (invoke-class this op a))
-  (invoke [this op a b]
-    (invoke-class this op a b))
-  (invoke [this op a b c]
-    (invoke-class this op a b c)))
-
-(defn wrap-class [fqn fqs]
-  (CDKClass. fqn fqs))
-
-(defn- make-rest-args-optional [x]
-  (list* (update (into [] x) 1 conj '& '_)))
-
-(defn- package->ns-sym [package]
-  (-> package
-      (string/replace "@" "")
-      (string/replace "/" ".")
-      (symbol)))
-
-(defn- class-sym [fqn]
-  (-> fqn
-      (string/split #"\.")
-      (last)
-      (symbol)))
-
-;;------------------------------------------------------------------------------
-;; API
-
-(defmacro require [& package+alias]
+  Example:
+  
+  (cdk/require [\"@aws-cdk/aws-lambda\" lambda])"
+  [& package+alias]
   (doseq [[package alias*] package+alias]
     (client/load-module package)
-    (let [package-ns (-> package (package->ns-sym) (create-ns))
+    (let [package-ns (-> package (impl/package->ns-sym) (create-ns))
           ns-sym     (-> package-ns (str) (symbol))
           types      (get (client/get-manifest package) "types")]
       (doseq [[fqn description] types]
-        (let [class-sym* (class-sym fqn)]
+        (let [class-sym* (impl/class-sym fqn)]
           (intern ns-sym
                   (with-meta class-sym*
                     {:cdk/description description
                      :cdk/fqn         fqn})
-                  (wrap-class fqn nil))))
+                  (impl/wrap-class fqn nil))))
       (alias alias* ns-sym))))
 
 (require ["@aws-cdk/core" cdk-core])
 
-(defmacro defextension [name cdk-class & override+fns]
+(defmacro defextension
+  "Extends an existing cdk class. Right now the only extension allowed
+  is :cdk/init which allows the initialization behavior to be
+  specified.
+
+  Example:
+
+  (cdk/require [\"@aws-cdk/core\" aws-core]
+               [\"@aws-cdk/aws-s3\" aws-s3])
+
+  (cdk/defextension stack cdk-core/Stack
+    :cdk/init
+    (fn [this]
+      (aws-s3/bucket this \"MyBucket\" {})))"
+  [name cdk-class & override+fns]
   (let [fqn       (-> cdk-class (resolve) (meta) (:cdk/fqn))
         overrides (into {}
-                        (map #(update % 1 make-rest-args-optional))
+                        (map #(update % 1 impl/make-rest-args-optional))
                         (apply hash-map override+fns))
         fqs       (str (str *ns*) "/" (str name))]
-    `(def ~(with-meta name `{::overrides ~overrides}) (wrap-class ~fqn (symbol ~fqs)))))
+    `(def ~(with-meta name `{::impl/overrides ~overrides})
+       (impl/wrap-class ~fqn (symbol ~fqs)))))
 
-(defmacro defapp [name & override+fns]
+(defmacro defapp
+  "The @aws-cdk/core.App class is the main class for a CDK project.
+
+  `defapp` is a convenience macro that creates an extension for an app
+  with a signature similar to defn. The first argument will be the app
+  itself and is to be used in the body to wire in children constructs.
+
+  After declaring itself, the app extension instantiates itself which
+  forces cdk validations to occur to streamline the repl-workflow.
+
+  Example:
+
+  (cdk/defapp app
+    [this]
+    (stack this \"MyDevStack\" {}))"
+  [name args & body]
   `(do
-     (defextension ~name aws-cdk.core/App ~@override+fns)
+     (defextension ~name aws-cdk.core/App
+       :cdk/init
+       (fn ~args ~@body))
      (alter-var-root (resolve (quote ~name)) #(% :cdk/create))))
 
-(defmacro describe-data [cdk-class]
+(defmacro describe-data
+  "Given a cdk-class, returns the jsii manifest data for the class."
+  [cdk-class]
   (some-> cdk-class
           resolve
           meta

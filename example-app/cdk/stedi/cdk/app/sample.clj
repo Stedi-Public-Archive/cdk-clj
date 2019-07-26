@@ -15,7 +15,5 @@
        :memorySize  2048
        :environment {"STEDI_LAMBDA_ENTRYPOINT" "stedi.app.sample/handler"}})))
 
-(cdk/defapp app
-  :cdk/init
-  (fn [this]
-    (stack :cdk/create this "DevStack")))
+(cdk/defapp app [this]
+  (stack :cdk/create this "DevStack"))
