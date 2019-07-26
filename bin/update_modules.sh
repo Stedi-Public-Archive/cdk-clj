@@ -8,9 +8,10 @@ CDK_MODULES_ZIP=${CDK_MODULES_TARGET}.zip
 
 rm -fr $CDK_MODULES_DIR
 mkdir -p $CDK_MODULES_TARGET
+mkdir -p resources
 ZIP_URL=$(curl -s https://api.github.com/repos/aws/aws-cdk/releases/latest | jq -r '.assets[0].browser_download_url')
 wget $ZIP_URL -O $CDK_MODULES_ZIP
 unzip $CDK_MODULES_ZIP -d $CDK_MODULES_TARGET
-rm ./resources/*.jsii.tgz
+rm -f ./resources/*.jsii.tgz
 cp $CDK_MODULES_TARGET/js/*.jsii.tgz ./resources
-ls resources | grep jsii > resources/jsii-modules.txt
+ls resources | grep jsii.tgz > resources/jsii-modules.txt

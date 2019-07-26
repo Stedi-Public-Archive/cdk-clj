@@ -112,5 +112,4 @@ aws-workspaces@1.2.0.jsii.tgz
 core@1.2.0.jsii.tgz
 custom-resources@1.2.0.jsii.tgz
 cx-api@1.2.0.jsii.tgz
-jsii-modules.txt
 region-info@1.2.0.jsii.tgz
