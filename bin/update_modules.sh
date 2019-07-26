@@ -13,3 +13,4 @@ wget $ZIP_URL -O $CDK_MODULES_ZIP
 unzip $CDK_MODULES_ZIP -d $CDK_MODULES_TARGET
 rm ./resources/*.jsii.tgz
 cp $CDK_MODULES_TARGET/js/*.jsii.tgz ./resources
+ls resources | grep jsii > resources/jsii-modules.txt

@@ -1,22 +1,11 @@
 (ns stedi.cdk.jsii.modules
   (:require [clojure.data.json :as json]
-            [clojure.edn :as edn]
             [clojure.java.io :as io]
+            [clojure.string :as string]
             [com.stuartsierra.dependency :as dep])
   (:import (java.util.zip GZIPInputStream)
            (org.apache.commons.compress.archivers.tar TarArchiveInputStream)
            (software.amazon.jsii JsiiModule)))
-
-(defn- module-resource-paths []
-  (-> "cdk-modules.edn" io/resource slurp edn/read-string))
-
-(defn- update-module-resource-paths []
-  (->> (file-seq (io/file "./resources"))
-       (map #(.getName %))
-       (filter #(.endsWith % ".tgz"))
-       (into [])
-       (pr-str)
-       (spit "resources/cdk-modules.edn")))
 
 (defn- load-manifest [resource]
   (with-open [is (-> resource
@@ -57,7 +46,8 @@
                (dep/graph))))
 
 (defn- fetch-all-modules* []
-  (->> (module-resource-paths)
+  (->> (slurp (io/resource "jsii-modules.txt"))
+       (string/split-lines)
        (map from-resouce)
        (map (juxt #(get-in % [:props :module-name]) identity))
        (filter first)
