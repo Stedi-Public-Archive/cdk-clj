@@ -49,22 +49,26 @@
      :deps     (get-deps manifest)
      :manifest manifest}))
 
-(defn- topo-sort [modules]
+(defn- dep-graph [modules]
   (->> modules
        (map (juxt first (comp :deps second)))
        (reduce (fn [graph [module deps]]
                  (reduce #(dep/depend %1 module %2) graph deps))
-               (dep/graph))
-       (dep/topo-sort)))
+               (dep/graph))))
 
-(defn- all* []
-  (let [modules* (->> (module-resource-paths)
-                      (map from-resouce)
-                      (map (juxt #(get-in % [:props :module-name]) identity))
-                      (filter first)
-                      (into {}))]
-    (->> modules*
-         (topo-sort)
-         (map modules*))))
+(defn- fetch-all-modules* []
+  (->> (module-resource-paths)
+       (map from-resouce)
+       (map (juxt #(get-in % [:props :module-name]) identity))
+       (filter first)
+       (into {})))
 
-(def all (memoize all*))
+(def ^:private fetch-all-modules (memoize fetch-all-modules*))
+
+(defn dependencies-for
+  [module-name]
+  (let [all-modules     (fetch-all-modules)
+        dep-graph*      (dep-graph all-modules)
+        transitive-deps (dep/transitive-dependencies dep-graph* module-name)]
+    (->> (concat (filter transitive-deps (dep/topo-sort dep-graph*)) [module-name])
+         (map all-modules))))

@@ -17,14 +17,12 @@
   []
   (.getClient jsii-runtime))
 
-(defn- load-module [{:keys [manifest module]}]
-  (when-not (@loaded-modules manifest)
-    (.loadModule (client) module)
-    (swap! loaded-modules conj manifest)))
-
-;; Load all cdk modules
-(doseq [module (modules/all)]
-  (load-module module))
+(defn load-module [module-name]
+  (let [to-load (modules/dependencies-for module-name)]
+    (doseq [{:keys [manifest module]} to-load]
+      (when-not (@loaded-modules manifest)
+        (.loadModule (client) module)
+        (swap! loaded-modules conj manifest)))))
 
 (defn get-manifest
   [module-name]

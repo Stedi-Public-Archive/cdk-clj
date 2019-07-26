@@ -81,6 +81,7 @@
 (defn- make-rest-args-optional [x]
   (list* (update (into [] x) 1 conj '& '_)))
 
+;; TODO: this should take a symbol rather than a fqn
 (defmacro defc [name fqn & override+fns]
   (let [overrides (into {}
                         (map #(update % 1 make-rest-args-optional))
@@ -114,6 +115,7 @@
 
 (defmacro require [& package+alias]
   (doseq [[package alias*] package+alias]
+    (client/load-module package)
     (let [package-ns (-> package
                          (package->ns-sym)
                          (create-ns))
