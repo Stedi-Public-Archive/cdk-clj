@@ -84,7 +84,7 @@
                     obj)
       :cdk/browse (browse-docs fqn)
 
-      (wrap-objects (client/call-static-method fqn (name op) args)))))
+      (wrap-objects (client/call-static-method fqn (name op) (unwrap-objects args))))))
 
 (deftype CDKClass [fqn fqs]
   clojure.lang.ILookup
