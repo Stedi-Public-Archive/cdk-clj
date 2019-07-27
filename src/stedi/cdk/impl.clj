@@ -80,7 +80,7 @@
     (case op
       :cdk/create (let [obj (CDKObject. (client/create-object fqn (unwrap-objects args)))]
                     (when-let [init-fn (:cdk/init overrides)]
-                      (apply init-fn obj args))
+                      (apply init-fn obj (rest args)))
                     obj)
       :cdk/browse (browse-docs fqn)
 
