@@ -2,7 +2,6 @@
   (:refer-clojure :exclude [require])
   (:require [clojure.data.json :as json]
             [clojure.java.io :as io]
-            [clojure.walk :as walk]
             [stedi.cdk.impl :as impl]
             [stedi.cdk.jsii.client :as client])
   (:import (software.amazon.jsii JsiiObjectRef)))
