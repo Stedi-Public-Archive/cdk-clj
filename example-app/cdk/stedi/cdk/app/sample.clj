@@ -1,6 +1,7 @@
 (ns stedi.cdk.app.sample
   (:require [stedi.cdk :as cdk]
-            [stedi.cdk.lambda :as lambda]))
+            [stedi.cdk.lambda :as lambda]
+            [stedi.app.sample :as sample-app]))
 
 (cdk/require ["@aws-cdk/core" cdk-core])
 
@@ -8,7 +9,7 @@
   :cdk/init
   (fn [this]
     (lambda/clj :cdk/create this "Function"
-                {:fn "stedi.app.sample/handler"})))
+                {:fn #'sample-app/handler})))
 
 (cdk/defapp app [this]
   (stack :cdk/create this "DevStack"))

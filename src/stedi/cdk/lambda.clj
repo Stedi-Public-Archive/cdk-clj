@@ -21,7 +21,7 @@
                                  :handler     "stedi.cdk.lambda.handler::handler"
                                  :runtime     (:JAVA_8 lambda/Runtime)
                                  :environment (merge environment
-                                                     {"STEDI_LAMBDA_ENTRYPOINT" fn})
+                                                     {"STEDI_LAMBDA_ENTRYPOINT" (-> fn symbol str)})
                                  :memorySize  2048})]
       (function :addLayers
                 (lambda/LayerVersion :cdk/create function "lib-layer"
