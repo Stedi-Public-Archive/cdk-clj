@@ -78,7 +78,13 @@
         fqn       (. cdk-class fqn)
         overrides (some-> fqs resolve meta ::overrides)]
     (case op
-      :cdk/create (let [obj (CDKObject. (client/create-object fqn (unwrap-objects args)))]
+      :cdk/create (let [arg-count (-> cdk-class
+                                      :cdk/definition
+                                      :initializer
+                                      :parameters
+                                      count)
+                        args*     (take arg-count args)
+                        obj       (CDKObject. (client/create-object fqn (unwrap-objects args*)))]
                     (when-let [init-fn (:cdk/init overrides)]
                       (apply init-fn obj (rest args)))
                     obj)
