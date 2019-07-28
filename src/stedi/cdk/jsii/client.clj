@@ -9,16 +9,22 @@
 
 (defonce ^:private object-mapper (ObjectMapper.))
 
-(defonce ^:private jsii-runtime (JsiiRuntime.))
+(defonce ^:private jsii-runtime (atom (JsiiRuntime.)))
 
 (defonce ^:private loaded-modules (atom #{}))
 
+(defn reset-runtime!
+  []
+  (reset! jsii-runtime (JsiiRuntime.))
+  (reset! loaded-modules #{}))
+
 (defn- client
   []
-  (.getClient jsii-runtime))
+  (.getClient @jsii-runtime))
 
 (defn load-module [module-name]
-  (let [to-load (modules/dependencies-for module-name)]
+  (let [module-name* (first (clojure.string/split module-name #"\."))
+        to-load      (modules/dependencies-for module-name*)]
     (doseq [{:keys [manifest module]} to-load]
       (when-not (@loaded-modules manifest)
         (.loadModule (client) module)
@@ -76,8 +82,10 @@
 
 (defn create-object
   ([fqn initializer-args]
+   (load-module fqn)
    (.createObject (client) fqn (map edn->json-node initializer-args)))
   ([fqn initializer-args callbacks]
+   (load-module fqn)
    (.createObject (client) fqn (map edn->json-node initializer-args) (map ->override callbacks))))
 
 (defn delete-object
@@ -100,10 +108,12 @@
 
 (defn set-static-property-value
   [fqn property value]
+  (load-module fqn)
   (.setStaticPropertyValue (client) fqn property (edn->json-node value)))
 
 (defn call-static-method
   [fqn method args]
+  (load-module fqn)
   (-> (.callStaticMethod (client) fqn method (edn->json-node args))
       (json-node->edn)))
 

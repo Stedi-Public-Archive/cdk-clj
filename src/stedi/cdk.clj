@@ -70,6 +70,7 @@
     [this]
     (stack this \"MyDevStack\" {}))"
   [name args & body]
+  (client/reset-runtime!)
   (when-not (.exists (io/file "cdk.json"))
     (spit "cdk.json"
           (json/write-str
