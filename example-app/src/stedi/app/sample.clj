@@ -1,4 +1,5 @@
 (ns stedi.app.sample)
 
 (defn handler [input]
-  {:status "Ok"})
+  {:status "Ok"
+   :input  input})
