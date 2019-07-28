@@ -57,10 +57,10 @@
     x))
 
 (defn- json-node->edn [json-node]
-  (-> json-node
-      (.toString)
-      (json/read-str :key-fn keyword)
-      (deserialize-refs)))
+  (some-> json-node
+          (.toString)
+          (json/read-str :key-fn keyword)
+          (deserialize-refs)))
 
 (defn- edn->json-node [data]
   (->> data
