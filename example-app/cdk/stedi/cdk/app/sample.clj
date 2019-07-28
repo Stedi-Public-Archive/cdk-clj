@@ -7,8 +7,8 @@
 (cdk/defextension stack cdk-core/Stack
   :cdk/init
   (fn [this]
-    (lambda/clj-lambda :cdk/create this "Function"
-                       {:fn "stedi.app.sample/handler"})))
+    (lambda/clj :cdk/create this "Function"
+                {:fn "stedi.app.sample/handler"})))
 
 (cdk/defapp app [this]
   (stack :cdk/create this "DevStack"))
