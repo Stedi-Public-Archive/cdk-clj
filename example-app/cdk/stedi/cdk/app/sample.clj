@@ -12,7 +12,3 @@
 
 (cdk/defapp app [this]
   (stack :cdk/create this "DevStack"))
-
-(comment
-  (:cdk/definition cdk-core/Construct)
-  com.amazonaws.services.lambda.runtime.Context)
