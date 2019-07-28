@@ -8,22 +8,23 @@
 (cdk/require ["@aws-cdk/core" cdk-core]
              ["@aws-cdk/aws-lambda" lambda])
 
-(cdk/defextension clj cdk-core/Construct
-  :cdk/init
-  (fn [this _name {:keys [fn environment]}]
-    (let [path      (get-in this [:node :path])
+(cdk/defextension clj lambda/Function
+  :cdk/build
+  (fn [constructor parent id {:keys [fn environment]}]
+    (let [path      (str (get-in parent [:node :path]) "/" id)
           build-dir (str "./target/" (string/replace path "/" "_"))
           
-          {:keys [lib-layer aot-layer src]} (impl/build-layers build-dir)]
-      (lambda/Function :cdk/create this "function"
-                       {:code        (lambda/Code :cdk/asset src)
-                        :handler     "stedi.cdk.lambda.handler::handler"
-                        :runtime     (:JAVA_8 lambda/Runtime)
-                        :environment (merge environment
-                                            {"STEDI_LAMBDA_ENTRYPOINT" fn})
-                        :memorySize  2048
-                        :layers
-                        [(lambda/LayerVersion :cdk/create this "lib-layer"
-                                              {:code (lambda/Code :cdk/asset lib-layer)})
-                         (lambda/LayerVersion :cdk/create this "class-layer"
-                                              {:code (lambda/Code :cdk/asset aot-layer)})]}))))
+          {:keys [lib-layer aot-layer src]} (impl/build-layers build-dir)
+
+          function (constructor parent id
+                                {:code        (lambda/Code :cdk/asset src)
+                                 :handler     "stedi.cdk.lambda.handler::handler"
+                                 :runtime     (:JAVA_8 lambda/Runtime)
+                                 :environment (merge environment
+                                                     {"STEDI_LAMBDA_ENTRYPOINT" fn})
+                                 :memorySize  2048})]
+      (function :addLayers
+                (lambda/LayerVersion :cdk/create function "lib-layer"
+                                     {:code (lambda/Code :cdk/asset lib-layer)})
+                (lambda/LayerVersion :cdk/create function "class-layer"
+                                     {:code (lambda/Code :cdk/asset aot-layer)})))))

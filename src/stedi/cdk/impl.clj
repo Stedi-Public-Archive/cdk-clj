@@ -71,6 +71,23 @@
         y))
     x))
 
+(defn create-object [cdk-class overrides args]
+  (let [fqn            (. cdk-class fqn)
+        obj-ref        (atom nil)
+        constructor-fn (fn [& args*]
+                         (if-not @obj-ref
+                           (let [obj (CDKObject. (client/create-object fqn (unwrap-objects args*)))]
+                             (reset! obj-ref obj))
+                           (throw (Exception. "constructor-fn can only be called once"))))]
+    (if-let [build-fn (:cdk/build overrides)]
+      (apply build-fn constructor-fn args)
+      (apply constructor-fn args))
+    (if-let [obj @obj-ref]
+      (when-let [init-fn (:cdk/init overrides)]
+        (apply init-fn obj (rest args)))
+      (throw (Exception. "constructor-fn wasn't called in :cdk/build")))
+    @obj-ref))
+
 (defn invoke-class
   [cdk-class op & args]
   (assert (keyword? op) "op must be a keyword")
@@ -78,16 +95,7 @@
         fqn       (. cdk-class fqn)
         overrides (some-> fqs resolve meta ::overrides)]
     (case op
-      :cdk/create (let [arg-count (-> cdk-class
-                                      :cdk/definition
-                                      :initializer
-                                      :parameters
-                                      count)
-                        args*     (take arg-count args)
-                        obj       (CDKObject. (client/create-object fqn (unwrap-objects args*)))]
-                    (when-let [init-fn (:cdk/init overrides)]
-                      (apply init-fn obj (rest args)))
-                    obj)
+      :cdk/create (create-object cdk-class overrides args)
       :cdk/browse (browse-docs fqn)
 
       (wrap-objects (client/call-static-method fqn (name op) (unwrap-objects args))))))
