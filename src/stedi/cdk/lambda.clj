@@ -1,36 +1,62 @@
 (ns stedi.cdk.lambda
   (:require [clojure.java.io :as io]
+            [clojure.string :as string]
             [clojure.tools.deps.alpha :as deps]
-            [clojure.tools.namespace.find :as ns-find]))
+            [clojure.tools.namespace.find :as ns-find]
+            [mach.pack.alpha.aws-lambda :as lambda-pack]
+            [mach.pack.alpha.impl.elodin :as elodin]
+            [mach.pack.alpha.impl.lib-map :as lib-map]
+            [mach.pack.alpha.impl.tools-deps :as tools-deps]
+            [mach.pack.alpha.impl.vfs :as vfs]
+            [stedi.cdk :as cdk]))
+
+;; TODO:
+;; - hash outputs to prevent redundant rebuilds
+;; - allow aot layer to be parameterized
+
+(defn write-layer-zip
+  [lib-map output]
+  (io/make-parents output)
+  (vfs/write-vfs
+    {:type   :zip
+     :stream (io/output-stream output)}
+    (concat
+      (map
+        (fn [{:keys [path] :as all}]
+          {:input (io/input-stream path)
+           :path  ["java/lib" (elodin/jar-name all)]})
+        (lib-map/lib-jars lib-map))
+
+      (map
+        (fn [{:keys [path] :as all}]
+          {:paths (vfs/files-path
+                    (file-seq (io/file path))
+                    (io/file path))
+           :path  ["java/lib" (format "%s.jar" (elodin/directory-name all))]})
+        (lib-map/lib-dirs lib-map))))
+  output)
+
+(defn write-source-zip [paths dest]
+  (io/make-parents dest)
+  (lambda-pack/write-zip
+    {::tools-deps/paths paths}
+    dest)
+  dest)
 
 (defn build-lib-layer
-  [build-dir deps]
-  (let [layer-dir  (str build-dir "lib-layer/")
-        target-dir (str layer-dir "java/lib/")
-        lib-map
-        (deps/resolve-deps
-          {:deps      (merge '{com.amazonaws/aws-lambda-java-core {:mvn/version "1.2.0"}}
-                             deps)
-           :mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}
-                       "clojars" {:url "https://repo.clojars.org/"}}}
-          {})]
-    (transduce (comp (mapcat (comp :paths second))
-                     (filter #(re-find #"\.jar$" %))
-                     (map io/file))
-               (completing
-                 (fn [_ src-file]
-                   (let [dest      (str target-dir (.getName src-file))
-                         dest-file (io/file dest)]
-                     (io/make-parents dest-file)
-                     (io/copy src-file dest-file))))
-               nil
-               lib-map)
-    layer-dir))
+  [build-dir]
+  (-> (tools-deps/slurp-deps nil)
+      (select-keys [:deps])
+      (update :deps merge '{com.amazonaws/aws-lambda-java-core {:mvn/version "1.2.0"}
+                            org.clojure/data.json              {:mvn/version "0.2.6"}})
+      (deps/resolve-deps {})
+      (write-layer-zip (str build-dir "lib-layer.zip"))))
 
-(defn build-class-layer
-  [build-dir paths]
-  (let [layer-dir  (str build-dir "class-layer/")
-        target-dir (str layer-dir "java/")
+(defn build-aot-layer
+  [build-dir]
+  (let [paths      (:paths (tools-deps/slurp-deps nil))
+        aot-dir    (str build-dir "aot/")
+        layer-dir  (str aot-dir "classes/")
         path-files (map io/file paths)
         external-nses
         (->> path-files
@@ -42,27 +68,54 @@
              (map first)
              (remove (set (mapcat ns-find/find-namespaces-in-dir path-files)))
              (set))]
-    (io/make-parents (io/file (str target-dir ".")))
-    (binding [*compile-path* target-dir]
+    (io/make-parents (io/file (str layer-dir ".")))
+    (binding [*compile-path* layer-dir]
       (doseq [ns (conj external-nses 'stedi.cdk.lambda.handler)]
         (compile ns)))
-    layer-dir))
+    (spit (str aot-dir "deps.edn") "{:paths [\"classes\"] :deps {}}")
+    (-> {:deps `{~'cdk.app/aot-layer {:local/root ~aot-dir}}}
+        (deps/resolve-deps {})
+        (select-keys ['cdk.app/aot-layer])
+        (write-layer-zip (str build-dir "aot.zip")))))
 
-(defn build
-  [{:keys [deps paths build-dir]}]
-  (let [build-dir* (str build-dir
-                        (when-not (re-find #"/$" build-dir) "/"))]
-    (doseq [file (reverse (file-seq (io/file build-dir*)))]
-      (io/delete-file file))
-    {:lib-layer-dir   (build-lib-layer build-dir* deps)
-     :class-layer-dir (build-class-layer build-dir* paths)}))
+(defn build-src-layer
+  [build-dir]
+  (let [layer-dir (str build-dir "source.zip")]
+    (-> (tools-deps/slurp-deps nil)
+        (:paths)
+        (write-source-zip layer-dir))))
 
-(comment
-  (build {:build-dir "./target/foo/"
-          :deps      '{clj-http {:mvn/version "3.10.0"}}
-          :paths     ["src"]})
+(defn build-layers
+  [build-dir]
+  (let [build-dir*     (str build-dir
+                            (when-not (re-find #"/$" build-dir) "/"))
+        build-dir-file (io/file build-dir*)]
+    (when (.exists build-dir-file)
+      (doseq [file (reverse (file-seq build-dir-file))]
+        (io/delete-file file)))
+    {:lib-layer (build-lib-layer build-dir*)
+     :aot-layer (build-aot-layer build-dir*)
+     :src       (build-src-layer build-dir*)}))
 
-  (file-seq (io/file "./target/foo/"))
+(cdk/require ["@aws-cdk/core" cdk-core]
+             ["@aws-cdk/aws-lambda" lambda])
 
-  (build-class-layer ["src"])
-  )
+(cdk/defextension clj-lambda cdk-core/Construct
+  :cdk/init
+  (fn [this _name {:keys [fn environment]}]
+    (let [path      (get-in this [:node :path])
+          build-dir (str "./target/" (string/replace path "/" "_"))
+          {:keys [lib-layer aot-layer src]}
+          (build-layers build-dir)]
+      (lambda/Function :cdk/create this "function"
+                       {:code        (lambda/Code :cdk/asset src)
+                        :handler     "stedi.cdk.lambda.handler::handler"
+                        :runtime     (:JAVA_8 lambda/Runtime)
+                        :environment (merge {"STEDI_LAMBDA_ENTRYPOINT" (str (symbol fn))}
+                                            environment)
+                        :memorySize  2048
+                        :layers
+                        [(lambda/LayerVersion :cdk/create this "lib-layer"
+                                              {:code (lambda/Code :cdk/asset lib-layer)})
+                         (lambda/LayerVersion :cdk/create this "class-layer"
+                                              {:code (lambda/Code :cdk/asset aot-layer)})]}))))

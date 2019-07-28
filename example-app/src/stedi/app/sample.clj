@@ -1,6 +1,4 @@
-(ns stedi.app.sample
-  (:require [cognitect.aws.client.api :as aws]
-            [stedi.lambda]))
+(ns stedi.app.sample)
 
 (defn handler [input]
   {:status "Ok"})
