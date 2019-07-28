@@ -1,5 +1,5 @@
 (ns stedi.app.sample)
 
 (defn handler [input]
-  {:status "Ok"
-   :input  input})
+  {:statusCode 200
+   :body       "Hello world"})

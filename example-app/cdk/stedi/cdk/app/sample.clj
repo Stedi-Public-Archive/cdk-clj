@@ -3,13 +3,16 @@
             [stedi.cdk.lambda :as lambda]
             [stedi.app.sample :as sample-app]))
 
-(cdk/require ["@aws-cdk/core" cdk-core])
+(cdk/require ["@aws-cdk/core" cdk-core]
+             ["@aws-cdk/aws-apigateway" apigw])
 
 (cdk/defextension stack cdk-core/Stack
   :cdk/init
   (fn [this]
-    (lambda/clj :cdk/create this "Function"
-                {:fn #'sample-app/handler})))
+    (let [function (lambda/clj :cdk/create this "Function"
+                               {:fn #'sample-app/handler})]
+      (apigw/LambdaRestApi :cdk/create this "Api"
+                           {:handler function}))))
 
 (cdk/defapp app [this]
   (stack :cdk/create this "DevStack"))
