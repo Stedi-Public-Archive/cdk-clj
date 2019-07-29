@@ -74,7 +74,7 @@
   (when-not (.exists (io/file "cdk.json"))
     (spit "cdk.json"
           (json/write-str
-            {:app (format "clj -A:dev -m stedi.cdk.main %s"
+            {:app (format "clojure -A:dev -m stedi.cdk.main %s"
                           (str *ns* "/" name))}
             :escape-slash false)))
   `(do
