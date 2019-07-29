@@ -103,6 +103,7 @@
 
 (defn get-static-property-value
   [fqn property]
+  (load-module fqn)
   (-> (.getStaticPropertyValue (client) fqn property)
       (json-node->edn)))
 
