@@ -24,6 +24,75 @@ into an enjoyable experience with immediate feedback and grants the
 ability for Clojure code to be deployed to AWS with minimal
 configuration.
 
+## Quick Start
+
+1. Install `aws-cdk`:
+
+``` clojure
+npm install -g aws-cdk
+```
+
+2. Create a new directory with the following `deps.edn`:
+
+``` clojure
+{:paths   ["src"]
+ :deps    {org.clojure/clojure {:mvn/version "1.10.1"}}
+ :aliases {:dev {:extra-paths ["cdk"]
+                 :extra-deps  {stedi/cdk-kit {:git/url "git@github.com:StediInc/cdk-kit.git"
+                                              :sha     "86c264fdcbf1d27155122b8e2679b137bec7c3f6"}}}}}
+```
+
+3. Create `./cdk/stedi/cdk/my_app.clj`:
+
+``` clojure
+(ns stedi.cdk.my-app
+  (:require [stedi.cdk :as cdk]
+            [stedi.cdk.lambda :as lambda]
+            [stedi.my-app :as my-app]))
+
+(cdk/require ["@aws-cdk/core" cdk-core])
+
+(cdk/defextension stack cdk-core/Stack
+  :cdk/init
+  (fn [this]
+    (lambda/clj :cdk/create this "function"
+                {:fn #'my-app/echo})))
+
+(cdk/defapp app [this]
+  (stack :cdk/create this "my-app-dev"))
+```
+
+4. Open up a repl and `(require 'stedi.cdk.my-app)` this should create
+   a `cdk.json` file in the root of the project.
+
+5. Create `./src/stedi/my_app.clj`:
+
+``` clojure
+(ns stedi.my-app)
+
+(defn echo [input]
+  {:echoed input})
+```
+
+6. List your stacks to verify correct configuration:
+
+```
+cdk ls
+# should return `my-app-dev`
+```
+
+7. See the yaml this deployment will produce for cloudformation:
+
+```
+cdk synth my-app-dev
+```
+
+8. Deploy the stack to AWS:
+
+```
+cdk deploy my-app-dev
+```
+
 ## Approach
 
 Jsii is a protocol that allows TypeScript classes and objects to be
