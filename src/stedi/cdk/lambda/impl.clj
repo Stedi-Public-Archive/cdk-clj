@@ -52,6 +52,7 @@
 
 (defn write-source-zip [paths output-dir]
   (let [hash     (->> (mapcat (comp file-seq io/file) paths)
+                      (filter #(.exists %))
                       (remove #(.isDirectory %))
                       (map slurp)
                       (apply str)
