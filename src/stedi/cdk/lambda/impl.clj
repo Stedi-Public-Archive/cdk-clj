@@ -70,6 +70,8 @@
       (select-keys [:deps])
       (update :deps merge '{com.amazonaws/aws-lambda-java-core {:mvn/version "1.2.0"}
                             org.clojure/data.json              {:mvn/version "0.2.6"}})
+      (update :mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}
+                          "clojars" {:url "https://repo.clojars.org/"}})
       (deps/resolve-deps {})
       (write-layer-zip (str build-dir "lib-layer-"))))
 
