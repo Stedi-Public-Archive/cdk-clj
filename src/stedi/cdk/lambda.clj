@@ -22,7 +22,8 @@
                                  :runtime     (:JAVA_8 lambda/Runtime)
                                  :environment (merge environment
                                                      {"STEDI_LAMBDA_ENTRYPOINT" (-> fn symbol str)})
-                                 :memorySize  2048})]
+                                 :memorySize  2048
+                                 :timeout     (cdk-core/Duration :minutes 1)})]
       (function :addLayers
                 (lambda/LayerVersion :cdk/create function "lib-layer"
                                      {:code (lambda/Code :cdk/asset lib-layer)})
