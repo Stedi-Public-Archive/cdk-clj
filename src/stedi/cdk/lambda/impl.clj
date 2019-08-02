@@ -94,7 +94,7 @@
              (set))]
     (io/make-parents (io/file (str layer-dir ".")))
     (binding [*compile-path* layer-dir]
-      (doseq [ns (conj external-nses 'stedi.cdk.lambda.handler)]
+      (doseq [ns ['stedi.cdk.lambda.handler]#_(conj external-nses 'stedi.cdk.lambda.handler)]
         (compile ns)))
     (spit (str aot-dir "deps.edn") "{:paths [\"classes\"] :deps {}}")
     (-> {:deps `{~'cdk.app/aot-layer {:local/root ~aot-dir}}}
