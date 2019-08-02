@@ -44,6 +44,8 @@
           (wrap-objects))))
 
   clojure.lang.IFn
+  (applyTo [this arg-list]
+    (apply invoke-object this arg-list))
   (invoke [this op]
     (invoke-object this op))
   (invoke [this op a]
@@ -110,6 +112,8 @@
           (wrap-objects))))
 
   clojure.lang.IFn
+  (applyTo [this arg-list]
+    (apply invoke-class arg-list))
   (invoke [this op]
     (invoke-class this op))
   (invoke [this op a]
