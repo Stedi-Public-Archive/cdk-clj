@@ -99,6 +99,7 @@
     (case op
       :cdk/create (create-object cdk-class overrides args)
       :cdk/browse (browse-docs fqn)
+      :cdk/enum   {"$jsii.enum" (str fqn "/" (name (first args)))}
 
       (wrap-objects (client/call-static-method fqn (name op) (unwrap-objects args))))))
 
