@@ -272,8 +272,23 @@ conveniences:
 * Check out the [CDK API Docs][5] to see what modules are available and
   how to use them
 
+## Troubleshooting
+
+### Cannot find the 'jsii-runtime' executable (JSII_RUNTIME or PATH)
+[This error][jsii-404] is non-specific and is raised on any failure to launch
+the runtime process, not just the missing executable named; that the causative
+exception is not chained makes this harder to debug.
+
+One possible cause is not having the **Node.js** executable (`node`) on the PATH
+given to the JVM.  If you're using a Node version or [virtual
+environment][nodeenv] manager, add the appropriate directory to the JVM
+environment.
+
 [1]: https://docs.aws.amazon.com/cdk/latest/guide/home.html
 [2]: https://github.com/aws/jsii
 [3]: https://docs.aws.amazon.com/cdk/api/latest/
 [4]: https://github.com/StediInc/cdk-kit/tree/master/example-app
 [5]: https://docs.aws.amazon.com/cdk/api/latest/docs/aws-construct-library.html
+
+[jsii-404]: https://github.com/aws/jsii/blob/850f42bea4218f2563d221aff28926da16692f62/packages/jsii-java-runtime/project/src/main/java/software/amazon/jsii/JsiiRuntime.java#L220
+[nodeenv]: https://github.com/ekalinin/nodeenv
