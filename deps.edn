@@ -3,7 +3,6 @@
            org.apache.commons/commons-compress {:mvn/version "1.0"}
            org.clojure/data.json               {:mvn/version "0.2.6"}
            software.amazon.jsii/jsii-runtime   {:mvn/version "0.14.2"}
-           org.clojure/tools.namespace         {:mvn/version "0.3.0"}
            org.clojure/tools.deps.alpha        {:mvn/version "0.7.527"}
            com.amazonaws/aws-lambda-java-core  {:mvn/version "1.2.0"}
            pack/pack.alpha                     {:git/url "https://github.com/juxt/pack.alpha.git"

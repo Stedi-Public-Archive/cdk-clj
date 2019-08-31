@@ -1,7 +1,6 @@
 (ns stedi.cdk.lambda.impl
   (:require [clojure.java.io :as io]
             [clojure.tools.deps.alpha :as deps]
-            [clojure.tools.namespace.find :as ns-find]
             [mach.pack.alpha.aws-lambda :as lambda-pack]
             [mach.pack.alpha.impl.elodin :as elodin]
             [mach.pack.alpha.impl.lib-map :as lib-map]
@@ -21,9 +20,6 @@
        (.digest digest-alg)
        (BigInteger. 1)
        (format "%032x")))
-
-;; TODO:
-;; - allow aot layer to be parameterized
 
 (defn write-layer-zip
   [lib-map output-dir]
@@ -72,34 +68,27 @@
       (update :deps merge '{com.amazonaws/aws-lambda-java-core {:mvn/version "1.2.0"}
                             org.clojure/data.json              {:mvn/version "0.2.6"}})
       (update :mvn/repos merge {"central" {:url "https://repo1.maven.org/maven2/"}
-                                "clojars"       {:url "https://repo.clojars.org/"}})
+                                "clojars" {:url "https://repo.clojars.org/"}})
       (deps/resolve-deps {})
       (write-layer-zip (str build-dir "lib-layer-"))))
 
 (defn build-aot-layer
-  [build-dir]
-  (let [paths      (:paths (tools-deps/slurp-deps nil))
-        aot-dir    (str build-dir "aot/")
-        layer-dir  (str aot-dir "classes/")
-        path-files (map io/file paths)
-        external-nses
-        (->> path-files
-             (mapcat ns-find/find-ns-decls-in-dir)
-             (tree-seq seqable? seq)
-             (filter #(and (list? %)
-                           (= :require (first %))))
-             (mapcat rest)
-             (map first)
-             (remove (set (mapcat ns-find/find-namespaces-in-dir path-files)))
-             (set))]
+  [build-dir aot]
+  (let [paths     (:paths (tools-deps/slurp-deps nil))
+        aot-dir   (str build-dir "aot/")
+        layer-dir (str aot-dir "classes/")
+        aot-nses  (concat ['stedi.cdk.lambda.handler] aot)]
+    (doseq [f (reverse (file-seq (io/file aot-dir)))]
+      (io/delete-file f))
     (io/make-parents (io/file (str layer-dir ".")))
     (binding [*compile-path* layer-dir]
-      (doseq [ns ['stedi.cdk.lambda.handler]#_(conj external-nses 'stedi.cdk.lambda.handler)]
+      (doseq [ns aot-nses]
         (compile ns)))
     (spit (str aot-dir "deps.edn") "{:paths [\"classes\"] :deps {}}")
     (-> {:deps `{~'cdk.app/aot-layer {:local/root ~aot-dir}}}
         (deps/resolve-deps {})
         (select-keys ['cdk.app/aot-layer])
+        (assoc-in ['cdk.app/aot-layer :cdk/aot-nses] aot-nses)
         (write-layer-zip (str build-dir "aot-layer-")))))
 
 (defn build-src-layer
@@ -109,9 +98,9 @@
       (write-source-zip (str build-dir "src-"))))
 
 (defn build-layers
-  [build-dir]
+  [build-dir aot]
   (let [build-dir*     (str build-dir
                             (when-not (re-find #"/$" build-dir) "/"))]
     {:lib-layer (build-lib-layer build-dir*)
-     :aot-layer (build-aot-layer build-dir*)
+     :aot-layer (build-aot-layer build-dir* aot)
      :src       (build-src-layer build-dir*)}))
