@@ -10,18 +10,18 @@
 
 (cdk/defextension clj lambda/Function
   :cdk/build
-  (fn [constructor parent id {:keys [fn environment]}]
+  (fn [constructor parent id {:keys [fn environment handler aot]}]
     (let [path      (str (get-in parent [:node :path]) "/" id)
           build-dir (str "./target/" (string/replace path "/" "_"))
           
-          {:keys [lib-layer aot-layer src]} (impl/build-layers build-dir)
+          {:keys [lib-layer aot-layer src]} (impl/build-layers build-dir aot)
 
           function (constructor parent id
                                 {:code        (lambda/Code :cdk/asset src)
-                                 :handler     "stedi.cdk.lambda.handler::handler"
+                                 :handler     (or handler "stedi.cdk.lambda.handler::handler")
                                  :runtime     (:JAVA_8 lambda/Runtime)
                                  :environment (merge environment
-                                                     {"STEDI_LAMBDA_ENTRYPOINT" (-> fn symbol str)})
+                                                     (when fn {"STEDI_LAMBDA_ENTRYPOINT" (-> fn symbol str)}))
                                  :memorySize  2048
                                  :timeout     (cdk-core/Duration :minutes 1)})]
       (function :addLayers
