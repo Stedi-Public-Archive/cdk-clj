@@ -79,7 +79,7 @@
         layer-dir (str aot-dir "classes/")
         aot-nses  (concat ['stedi.cdk.lambda.handler] aot)]
     (doseq [f (reverse (file-seq (io/file aot-dir)))]
-      (io/delete-file f))
+      (io/delete-file f true))
     (io/make-parents (io/file (str layer-dir ".")))
     (binding [*compile-path* layer-dir]
       (doseq [ns aot-nses]
