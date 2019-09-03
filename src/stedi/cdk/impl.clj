@@ -53,7 +53,10 @@
   (invoke [this op a b]
     (invoke-object this op a b))
   (invoke [this op a b c]
-    (invoke-object this op a b c)))
+    (invoke-object this op a b c))
+
+  java.lang.Object
+  (toString [this] (invoke-object this :toString)))
 
 (defn wrap-objects
   [x]
