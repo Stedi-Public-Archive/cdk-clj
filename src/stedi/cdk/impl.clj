@@ -68,7 +68,11 @@
   (empty [this] this)
 
   java.lang.Object
-  (toString [this] (invoke-object this :toString)))
+  (toString [this]
+    (try
+      (invoke-object this :toString)
+      (catch Exception _
+        (.getFqn object-ref)))))
 
 (defn wrap-objects
   [x]

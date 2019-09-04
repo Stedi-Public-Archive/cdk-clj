@@ -8,7 +8,7 @@
             ("@aws-cdk/core" Stack))
 
 (defn app-stack [app id]
-  (let [stack (Stack nil id {})]
+  (let [stack (Stack app id {})]
     (Function stack "my-fn"
               {:runtime (:JAVA_8 Runtime)
                :code    (AssetCode "./src")
