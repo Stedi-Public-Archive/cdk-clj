@@ -1,5 +1,5 @@
 (ns stedi.cdk
-  (:refer-clojure :exclude [require])
+  (:refer-clojure :exclude [require import])
   (:require [clojure.data.json :as json]
             [clojure.java.io :as io]
             [stedi.cdk.impl :as impl]
@@ -7,29 +7,7 @@
             [clojure.walk :as walk])
   (:import (software.amazon.jsii JsiiObjectRef)))
 
-(comment
-  (client/load-module "@aws-cdk/aws-lambda")
-  (keys (get-in (client/get-manifest "@aws-cdk/aws-lambda")
-                ["types" "@aws-cdk/aws-lambda.Function"]))
-  (impl/package->ns-sym "@aws-cdk/aws-lambda.Function")
-
-  (manifest "@aws-cdk/aws-lambda.Function")
-  (manifest "@aws-cdk/aws-ec2.SubnetType")
-
-  {"docs"
-   {"remarks"
-    "True for new Lambdas, false for imported Lambdas (they might live in different accounts).",
-    "stability" "stable",
-    "summary"
-    "Whether the addPermission() call adds any permissions."},
-   "immutable"        true,
-   "locationInModule" {"filename" "lib/function.ts", "line" 380},
-   "name"             "canCreatePermissions",
-   "overrides"        "@aws-cdk/aws-lambda.Function",
-   "protected"        true,
-   "type"             {"primitive" "boolean"}})
-
-(defn render-docs [docs]
+(defn- render-docs [docs]
   (str "\nStability: [" (:stability docs) "]"
        "\n\n"
        "Summary:\n\n"
@@ -38,20 +16,18 @@
        "Remarks:\n\n"
        (:remarks docs)))
 
-(defn intern-property
-  [{:keys [docs name ns-sym static fqn] :as args}]
-  (if static
-    (intern ns-sym
-            (with-meta (symbol name)
-              {:doc (render-docs docs)})
-            (fn [] (client/get-static-property-value fqn name)))
-    (intern ns-sym
-            (with-meta (symbol name)
-              {:arglists (list ['function])
-               :doc      (render-docs docs)})
-            (fn [this] ((keyword name) this)))))
+(defn- fqn->module
+  [fqn]
+  (-> fqn (clojure.string/split #"\.") (first)))
 
-(defn intern-method
+(defn- manifest [fqn]
+  (-> fqn
+      (fqn->module)
+      (client/get-manifest)
+      (get-in ["types" fqn])
+      (walk/keywordize-keys)))
+
+(defn- intern-method
   [{:keys [static parameters docs name ns-sym fqn]}]
   (if static
     (intern ns-sym
@@ -67,27 +43,23 @@
             (fn [this & args]
               (apply this (keyword name) args)))))
 
-(defn intern-initializer
-  [{:keys [ns-sym fqn parameters docs] :as args}]
+(defn- intern-initializer
+  [{:keys [ns-sym fqn parameters docs alias*] :as args}]
+  (intern *ns*
+          (with-meta alias*
+            {:arglists (list (mapv (comp symbol :name) parameters))
+             :doc      (with-out-str
+                         (println)
+                         (clojure.pprint/pprint (manifest fqn)))})
+          (impl/wrap-class fqn nil)))
+
+(defn- intern-enum-member
+  [{:keys [ns-sym name fqn]}]
   (intern ns-sym
-          (with-meta 'create
-            {:doc      (render-docs docs)
-             :arglists (list (mapv (comp symbol :name) parameters))})
-          (fn [& args]
-            (impl/create-object (impl/wrap-class fqn nil) {} args))))
+          (symbol name)
+          {"$jsii.enum" (str fqn "/" name)}))
 
-(defn fqn->module
-  [fqn]
-  (-> fqn (clojure.string/split #"\.") (first)))
-
-(defn manifest [fqn]
-  (-> fqn
-      (fqn->module)
-      (client/get-manifest)
-      (get-in ["types" fqn])
-      (walk/keywordize-keys)))
-
-(defn classes [fqn]
+(defn- classes [fqn]
   (let [manifest* (manifest fqn)]
     (lazy-cat [manifest*]
               (when-let [base (:base manifest*)]
@@ -97,15 +69,11 @@
   [fqn alias*]
   (let [module         (fqn->module fqn)
         module-ns      (-> fqn (impl/package->ns-sym) (create-ns))
-        ns-sym         (-> module-ns (str) (symbol))
+        ns-sym         (ns-name module-ns)
         _              (client/load-module module)
-        {:keys [properties
-                initializer
+        {:keys [initializer
+                members
                 docs]} (manifest fqn)]
-    (doseq [property (mapcat :properties (reverse (classes fqn)))]
-      (intern-property (merge property
-                              {:ns-sym ns-sym
-                               :fqn    fqn})))
     (doseq [method (mapcat :methods (reverse (classes fqn)))]
       (intern-method (merge method
                             {:ns-sym ns-sym
@@ -113,21 +81,29 @@
     (intern-initializer (merge initializer
                                {:ns-sym ns-sym
                                 :fqn    fqn
-                                :docs   docs}))
+                                :docs   docs
+                                :alias* alias*}))
+    (doseq [member members]
+      (intern-enum-member (merge member
+                                 {:ns-sym ns-sym
+                                  :fqn    fqn})))
     (alias alias* ns-sym)))
 
-(defmacro require-2
-  "Require's jsii modules and binds them to an alias. Allows for
-  multiple module requirement bindings.
+(defmacro import
+  "Imports jsii classes and binds them to an alias. Allows for multiple
+  module requirement bindings.
 
   Example:
   
-  (cdk/require [\"@aws-cdk/aws-lambda\" lambda])"
-  [& package+alias]
-  (doseq [[package alias*] package+alias]
-    (construct-namespace package alias*)))
+  (cdk/import (\"@aws-cdk/aws-lambda\" Function Runtime))"
+  [& imports]
+  (let [package+alias (for [[package & classes] imports
+                            class*              classes]
+                        [(str package "." (name class*)) class*])]
+    (doseq [[package alias*] package+alias]
+      (construct-namespace package alias*))))
 
-(defmacro require
+(defmacro ^:deprecated require
   "Require's jsii modules and binds them to an alias. Allows for
   multiple module requirement bindings.
 
@@ -148,9 +124,7 @@
                   (impl/wrap-class fqn nil))))
       (alias alias* ns-sym))))
 
-(require ["@aws-cdk/core" cdk-core])
-
-(defmacro defextension
+(defmacro ^:deprecated defextension
   "Extends an existing cdk class. Right now the only extension allowed
   is :cdk/init which allows the initialization behavior to be
   specified.
@@ -172,6 +146,8 @@
         fqs       (str (str *ns*) "/" (str name))]
     `(def ~(with-meta name `{::impl/overrides ~overrides})
        (impl/wrap-class ~fqn (symbol ~fqs)))))
+
+(import ("@aws-cdk/core" App))
 
 (defmacro defapp
   "The @aws-cdk/core.App class is the main class for a CDK project.
@@ -198,8 +174,6 @@
             {:app (format "clojure -A:dev -m stedi.cdk.main %s"
                           (str *ns* "/" name))}
             :escape-slash false)))
-  `(do
-     (defextension ~name aws-cdk.core/App
-       :cdk/init
-       (fn ~args ~@body))
-     (alter-var-root (resolve (quote ~name)) #(% :cdk/create))))
+  `(let [app# (App {})]
+     ((fn ~args ~@body) app#)
+     (def ~name app#)))
