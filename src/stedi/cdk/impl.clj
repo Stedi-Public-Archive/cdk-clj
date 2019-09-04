@@ -55,6 +55,18 @@
   (invoke [this op a b c]
     (invoke-object this op a b c))
 
+  clojure.lang.Seqable
+  (seq [this]
+    (seq
+      (into {} (comp (remove :static)
+                     (map (comp keyword :name))
+                     (map #(vector % (% this))))
+            (:properties (doc-data (.getFqn object-ref))))))
+
+  clojure.lang.IPersistentCollection
+  (cons [this x] this)
+  (empty [this] this)
+
   java.lang.Object
   (toString [this] (invoke-object this :toString)))
 
@@ -115,6 +127,14 @@
 
       (-> (client/get-static-property-value fqn (name k))
           (wrap-objects))))
+
+  clojure.lang.Seqable
+  (seq [this]
+    (seq
+      (into {} (comp (filter :static)
+                     (map (comp keyword :name))
+                     (map #(vector % (% this))))
+            (:properties (doc-data fqn)))))
 
   clojure.lang.IFn
   (applyTo [this arg-list]
