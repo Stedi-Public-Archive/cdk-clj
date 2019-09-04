@@ -3,8 +3,129 @@
   (:require [clojure.data.json :as json]
             [clojure.java.io :as io]
             [stedi.cdk.impl :as impl]
-            [stedi.cdk.jsii.client :as client])
+            [stedi.cdk.jsii.client :as client]
+            [clojure.walk :as walk])
   (:import (software.amazon.jsii JsiiObjectRef)))
+
+(comment
+  (client/load-module "@aws-cdk/aws-lambda")
+  (keys (get-in (client/get-manifest "@aws-cdk/aws-lambda")
+                ["types" "@aws-cdk/aws-lambda.Function"]))
+  (impl/package->ns-sym "@aws-cdk/aws-lambda.Function")
+
+  (manifest "@aws-cdk/aws-lambda.Function")
+  (manifest "@aws-cdk/aws-ec2.SubnetType")
+
+  {"docs"
+   {"remarks"
+    "True for new Lambdas, false for imported Lambdas (they might live in different accounts).",
+    "stability" "stable",
+    "summary"
+    "Whether the addPermission() call adds any permissions."},
+   "immutable"        true,
+   "locationInModule" {"filename" "lib/function.ts", "line" 380},
+   "name"             "canCreatePermissions",
+   "overrides"        "@aws-cdk/aws-lambda.Function",
+   "protected"        true,
+   "type"             {"primitive" "boolean"}})
+
+(defn render-docs [docs]
+  (str "\nStability: [" (:stability docs) "]"
+       "\n\n"
+       "Summary:\n\n"
+       (:summary docs)
+       "\n\n"
+       "Remarks:\n\n"
+       (:remarks docs)))
+
+(defn intern-property
+  [{:keys [docs name ns-sym static fqn] :as args}]
+  (if static
+    (intern ns-sym
+            (with-meta (symbol name)
+              {:doc (render-docs docs)})
+            (fn [] (client/get-static-property-value fqn name)))
+    (intern ns-sym
+            (with-meta (symbol name)
+              {:arglists (list ['function])
+               :doc      (render-docs docs)})
+            (fn [this] ((keyword name) this)))))
+
+(defn intern-method
+  [{:keys [static parameters docs name ns-sym fqn]}]
+  (if static
+    (intern ns-sym
+            (with-meta (symbol name)
+              {:doc      (render-docs docs)
+               :arglists (list (mapv (comp symbol :name) parameters))})
+            (fn [& args]
+              (client/call-static-method fqn name args)))
+    (intern ns-sym
+            (with-meta (symbol name)
+              {:doc      (render-docs docs)
+               :arglists (list (mapv (comp symbol :name) parameters))})
+            (fn [this & args]
+              (apply this (keyword name) args)))))
+
+(defn intern-initializer
+  [{:keys [ns-sym fqn parameters docs] :as args}]
+  (intern ns-sym
+          (with-meta 'create
+            {:doc      (render-docs docs)
+             :arglists (list (mapv (comp symbol :name) parameters))})
+          (fn [& args]
+            (impl/create-object (impl/wrap-class fqn nil) {} args))))
+
+(defn fqn->module
+  [fqn]
+  (-> fqn (clojure.string/split #"\.") (first)))
+
+(defn manifest [fqn]
+  (-> fqn
+      (fqn->module)
+      (client/get-manifest)
+      (get-in ["types" fqn])
+      (walk/keywordize-keys)))
+
+(defn classes [fqn]
+  (let [manifest* (manifest fqn)]
+    (lazy-cat [manifest*]
+              (when-let [base (:base manifest*)]
+                (classes base)))))
+
+(defn construct-namespace
+  [fqn alias*]
+  (let [module         (fqn->module fqn)
+        module-ns      (-> fqn (impl/package->ns-sym) (create-ns))
+        ns-sym         (-> module-ns (str) (symbol))
+        _              (client/load-module module)
+        {:keys [properties
+                initializer
+                docs]} (manifest fqn)]
+    (doseq [property (mapcat :properties (reverse (classes fqn)))]
+      (intern-property (merge property
+                              {:ns-sym ns-sym
+                               :fqn    fqn})))
+    (doseq [method (mapcat :methods (reverse (classes fqn)))]
+      (intern-method (merge method
+                            {:ns-sym ns-sym
+                             :fqn    fqn})))
+    (intern-initializer (merge initializer
+                               {:ns-sym ns-sym
+                                :fqn    fqn
+                                :docs   docs}))
+    (alias alias* ns-sym)))
+
+(defmacro require-2
+  "Require's jsii modules and binds them to an alias. Allows for
+  multiple module requirement bindings.
+
+  Example:
+  
+  (cdk/require [\"@aws-cdk/aws-lambda\" lambda])"
+  [& package+alias]
+  (doseq [[package alias*] package+alias]
+    (construct-namespace package alias*)))
 
 (defmacro require
   "Require's jsii modules and binds them to an alias. Allows for
