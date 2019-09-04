@@ -45,6 +45,7 @@
 
 (defn- intern-initializer
   [{:keys [ns-sym fqn parameters docs alias*] :as args}]
+  (ns-unmap *ns* alias*)
   (intern *ns*
           (with-meta alias*
             {:arglists (list (mapv (comp symbol :name) parameters))
