@@ -1,18 +1,31 @@
 (ns stedi.cdk
-  (:refer-clojure :exclude [require])
+  (:refer-clojure :exclude [require import])
   (:require [clojure.data.json :as json]
             [clojure.java.io :as io]
+            [clojure.walk :as walk]
             [stedi.cdk.impl :as impl]
+            [stedi.cdk.import :as import]
             [stedi.cdk.jsii.client :as client])
   (:import (software.amazon.jsii JsiiObjectRef)))
 
-(defmacro require
-  "Require's jsii modules and binds them to an alias. Allows for
-  multiple module requirement bindings.
+(defmacro import
+  "Imports jsii classes and binds them to an alias. Allows for multiple
+  module requirement bindings.
 
   Example:
   
-  (cdk/require [\"@aws-cdk/aws-lambda\" lambda])"
+  (cdk/import (\"@aws-cdk/aws-lambda\" Function Runtime))"
+  [& imports]
+  (let [fqn+alias (for [[module & classes] imports
+                        class*             classes]
+                    [(str module "." (name class*)) class*])]
+    (doseq [[fqn alias*] fqn+alias]
+      (import/import-as-namespace fqn alias*))))
+
+(defmacro ^:deprecated require
+  "
+  Deprecated in favor of `stedi.cdk/import`
+  "
   [& package+alias]
   (doseq [[package alias*] package+alias]
     (client/load-module package)
@@ -27,22 +40,10 @@
                   (impl/wrap-class fqn nil))))
       (alias alias* ns-sym))))
 
-(require ["@aws-cdk/core" cdk-core])
-
-(defmacro defextension
-  "Extends an existing cdk class. Right now the only extension allowed
-  is :cdk/init which allows the initialization behavior to be
-  specified.
-
-  Example:
-
-  (cdk/require [\"@aws-cdk/core\" aws-core]
-               [\"@aws-cdk/aws-s3\" aws-s3])
-
-  (cdk/defextension stack cdk-core/Stack
-    :cdk/init
-    (fn [this]
-      (aws-s3/bucket this \"MyBucket\" {})))"
+(defmacro ^:deprecated defextension
+  "
+  Deprecated in favor of using regular clojure functions.
+  "
   [name cdk-class & override+fns]
   (let [fqn       (-> cdk-class (resolve) (meta) (:cdk/fqn))
         overrides (into {}
@@ -51,6 +52,8 @@
         fqs       (str (str *ns*) "/" (str name))]
     `(def ~(with-meta name `{::impl/overrides ~overrides})
        (impl/wrap-class ~fqn (symbol ~fqs)))))
+
+(import ("@aws-cdk/core" App))
 
 (defmacro defapp
   "The @aws-cdk/core.App class is the main class for a CDK project.
@@ -77,8 +80,6 @@
             {:app (format "clojure -A:dev -m stedi.cdk.main %s"
                           (str *ns* "/" name))}
             :escape-slash false)))
-  `(do
-     (defextension ~name aws-cdk.core/App
-       :cdk/init
-       (fn ~args ~@body))
-     (alter-var-root (resolve (quote ~name)) #(% :cdk/create))))
+  `(let [app# (App {})]
+     ((fn ~args ~@body) app#)
+     (def ~name app#)))

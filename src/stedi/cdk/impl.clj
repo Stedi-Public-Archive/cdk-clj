@@ -56,7 +56,11 @@
     (invoke-object this op a b c))
 
   java.lang.Object
-  (toString [this] (invoke-object this :toString)))
+  (toString [this]
+    (try
+      (invoke-object this :toString)
+      (catch Exception _
+        (.getFqn object-ref)))))
 
 (defn wrap-objects
   [x]
@@ -95,16 +99,17 @@
 
 (defn invoke-class
   [cdk-class op & args]
-  (assert (keyword? op) "op must be a keyword")
-  (let [fqs       (. cdk-class fqs)
-        fqn       (. cdk-class fqn)
-        overrides (some-> fqs resolve meta ::overrides)]
-    (case op
-      :cdk/create (create-object cdk-class overrides args)
-      :cdk/browse (browse-docs fqn)
-      :cdk/enum   {"$jsii.enum" (str fqn "/" (name (first args)))}
+  (if (keyword? op)
+    (let [fqs       (. cdk-class fqs)
+          fqn       (. cdk-class fqn)
+          overrides (some-> fqs resolve meta ::overrides)]
+      (case op
+        :cdk/create (create-object cdk-class overrides args)
+        :cdk/browse (browse-docs fqn)
+        :cdk/enum   {"$jsii.enum" (str fqn "/" (name (first args)))}
 
-      (wrap-objects (client/call-static-method fqn (name op) (unwrap-objects args))))))
+        (wrap-objects (client/call-static-method fqn (name op) (unwrap-objects args)))))
+    (create-object cdk-class {} (concat [op] args))))
 
 (deftype CDKClass [fqn fqs]
   clojure.lang.ILookup
