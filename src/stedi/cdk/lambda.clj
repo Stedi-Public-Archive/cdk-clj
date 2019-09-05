@@ -36,5 +36,5 @@
 
 (defn ^:deprecated clj
   "Deprecated in favor of `stedi.cdk.lambda/Clj`."
-  [parent id {:keys [fn environment handler aot] :as props}]
+  [_ parent id {:keys [fn environment handler aot] :as props}]
   (Clj parent id props))
