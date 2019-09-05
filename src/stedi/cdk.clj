@@ -39,7 +39,7 @@
     (intern ns-sym
             (with-meta (symbol name)
               {:doc      (render-docs docs)
-               :arglists (list (mapv (comp symbol :name) parameters))})
+               :arglists (list (vec (cons 'this (mapv (comp symbol :name) parameters))))})
             (fn [this & args]
               (apply this (keyword name) args)))))
 
