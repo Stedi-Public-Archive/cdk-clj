@@ -5,8 +5,8 @@
   (:import (java.security MessageDigest)
            (java.util Base64)))
 
-(cdk/import ("@aws-cdk/core" Duration)
-            ("@aws-cdk/aws-lambda" Function AssetCode Runtime LayerVersion))
+(cdk/import ["@aws-cdk/core" Duration]
+            ["@aws-cdk/aws-lambda" Function AssetCode Runtime LayerVersion])
 
 (defn Clj
   "Wraps `@aws-cdk/aws-clambda.Function` to be clojure friendly.

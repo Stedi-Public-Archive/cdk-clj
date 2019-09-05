@@ -14,7 +14,7 @@
 
   Example:
   
-  (cdk/import (\"@aws-cdk/aws-lambda\" Function Runtime))"
+  (cdk/import [\"@aws-cdk/aws-lambda\" Function Runtime])"
   [& imports]
   (let [fqn+alias (for [[module & classes] imports
                         class*             classes]
