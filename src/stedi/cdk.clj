@@ -23,12 +23,9 @@
       (import/import-as-namespace fqn alias*))))
 
 (defmacro ^:deprecated require
-  "Require's jsii modules and binds them to an alias. Allows for
-  multiple module requirement bindings.
-
-  Example:
-  
-  (cdk/require [\"@aws-cdk/aws-lambda\" lambda])"
+  "
+  Deprecated in favor of `stedi.cdk/import`
+  "
   [& package+alias]
   (doseq [[package alias*] package+alias]
     (client/load-module package)
@@ -44,19 +41,9 @@
       (alias alias* ns-sym))))
 
 (defmacro ^:deprecated defextension
-  "Extends an existing cdk class. Right now the only extension allowed
-  is :cdk/init which allows the initialization behavior to be
-  specified.
-
-  Example:
-
-  (cdk/require [\"@aws-cdk/core\" aws-core]
-               [\"@aws-cdk/aws-s3\" aws-s3])
-
-  (cdk/defextension stack cdk-core/Stack
-    :cdk/init
-    (fn [this]
-      (aws-s3/bucket this \"MyBucket\" {})))"
+  "
+  Deprecated in favor of using regular clojure functions.
+  "
   [name cdk-class & override+fns]
   (let [fqn       (-> cdk-class (resolve) (meta) (:cdk/fqn))
         overrides (into {}
