@@ -1,23 +1,20 @@
 (ns stedi.cdk.app.sample
   (:require [clojure.spec.alpha :as s]
             [stedi.cdk :as cdk]
+            [stedi.cdk.lambda :as lambda]
             [stedi.app.sample :as sample-app]))
 
-(cdk/import ("@aws-cdk/aws-lambda" Function Runtime AssetCode)
-            ("@aws-cdk/aws-iam" Effect)
-            ("@aws-cdk/core" Stack))
+(cdk/import ("@aws-cdk/core" Stack)
+            ("@aws-cdk/aws-apigateway" LambdaRestApi))
 
-(defn app-stack [app id]
-  (let [stack (Stack app id {})]
-    (Function stack "my-fn"
-              {:runtime (:JAVA_8 Runtime)
-               :code    (AssetCode "./src")
-               :handler ""})
-    stack))
+(defn AppStack [app id]
+  (let [stack    (Stack app id)
+        function (lambda/Clj stack "function" {:fn #'sample-app/handler})]
+    (LambdaRestApi stack "api" {:handler function})))
 
 (cdk/defapp app
   [this]
-  (app-stack this "test"))
+  (AppStack this "DevStack"))
 
 (comment
   ;; Instantiation:
