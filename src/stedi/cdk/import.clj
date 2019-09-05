@@ -32,7 +32,8 @@
               {:doc      (render-docs docs)
                :arglists (list (mapv (comp symbol :name) parameters))})
             (fn [& args]
-              (client/call-static-method fqn name args)))
+              (let [cdk-class (impl/wrap-class fqn nil)]
+                (apply impl/invoke-class cdk-class (keyword name) args))))
     (intern ns-sym
             (with-meta (symbol name)
               {:doc      (render-docs docs)
