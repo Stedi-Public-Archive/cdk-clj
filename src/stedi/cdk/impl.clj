@@ -109,6 +109,8 @@
         :cdk/enum   {"$jsii.enum" (str fqn "/" (name (first args)))}
 
         (wrap-objects (client/call-static-method fqn (name op) (unwrap-objects args)))))
+    ;; This isn't ideal and should be dropped when we can drop
+    ;; backwards compatibility with the original syntax
     (create-object cdk-class {} (concat [op] args))))
 
 (deftype CDKClass [fqn fqs]
@@ -123,6 +125,10 @@
   clojure.lang.IFn
   (applyTo [this arg-list]
     (apply invoke-class arg-list))
+  (invoke [this]
+    ;; This isn't ideal and should be dropped when we can drop
+    ;; backwards compatibility with the original syntax
+    (create-object this {} []))
   (invoke [this op]
     (invoke-class this op))
   (invoke [this op a]
