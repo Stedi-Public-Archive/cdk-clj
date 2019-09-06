@@ -80,6 +80,7 @@
             {:app (format "clojure -A:dev -m stedi.cdk.main %s"
                           (str *ns* "/" name))}
             :escape-slash false)))
+  (alter-meta! #'App assoc :private false)
   `(let [app# (App {})]
      ((fn ~args ~@body) app#)
      (def ~name app#)))
