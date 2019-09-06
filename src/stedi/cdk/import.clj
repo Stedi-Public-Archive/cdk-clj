@@ -47,6 +47,7 @@
   (intern *ns*
           (with-meta alias*
             {:arglists (list (mapv (comp symbol :name) parameters))
+             :private  true
              :doc      (with-out-str
                          (println)
                          (clojure.pprint/pprint (manifest fqn)))})
