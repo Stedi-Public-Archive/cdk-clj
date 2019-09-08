@@ -6,8 +6,8 @@
                                                            com.google.cloud.tools/jib-core
                                                            org.clojure/tools.cli
                                                            org.clojure/tools.deps.alpha
-                                                           progrock
-                                                           rewrite-clj]}
+                                                           progrock/progrock
+                                                           rewrite-clj/rewrite-clj]}
            software.amazon.jsii/jsii-runtime {:mvn/version "0.14.2"}
            stedi/cdk-lambda                  {:local/root "./lambda"}}
  :aliases {:dev {:extra-paths ["test"]}}}

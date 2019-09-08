@@ -27,12 +27,11 @@
 
 (defn- write-zip
   [paths out-file]
-  (when-not (file-exists? out-file)
-    (io/make-parents out-file)
-    (vfs/write-vfs
-      {:type   :zip
-       :stream (io/output-stream out-file)}
-      paths))
+  (io/make-parents out-file)
+  (vfs/write-vfs
+    {:type   :zip
+     :stream (io/output-stream out-file)}
+    paths)
   out-file)
 
 (defn- lib-jars
@@ -63,28 +62,6 @@
           root)))
     paths))
 
-(defn- write-layer-zip
-  [lib-map output-path-prefix]
-  (let [paths    (concat (lib-jars lib-map)
-                         (lib-dirs lib-map))
-        hash     (->> paths
-                      (mapv :path)
-                      (pr-str)
-                      (calc-hash)) 
-        out-file (str output-path-prefix hash ".zip")]
-    (write-zip paths out-file)))
-
-(defn- write-src-zip
-  [paths output-path-prefix]
-  (let [src-paths* (src-paths (butlast paths))
-        ;; This hash needs to include the aot settings
-        hash       (->> src-paths*
-                        (mapv (juxt :path :last-modified))
-                        (pr-str)
-                        (calc-hash))
-        out-file   (str output-path-prefix hash ".zip")]
-    (write-zip src-paths* out-file)))
-
 (defn- clean-dir
   [dir]
   (doseq [f (reverse (file-seq (io/file dir)))]
@@ -99,27 +76,42 @@
                       :deps/root "lambda"
                       :sha       "9466e86d88369eac43256c93d77d61814e035d5a"}})
 
-(defn- build-lib-layer ;; should hash here and get rid of write-layer-zip
+(defn- build-lib-layer
   [deps-map build-dir]
-  (-> deps-map
-      (select-keys [:deps])
-      (update :deps (partial merge lambda-entrypoint-deps))
-      (update :mvn/repos (partial merge default-repos))
-      (deps/resolve-deps {})
-      (write-layer-zip (str build-dir "lib-layer-"))))
+  (let [deps-map* (-> deps-map
+                      (select-keys [:deps])
+                      (update :deps (partial merge lambda-entrypoint-deps))
+                      (update :mvn/repos (partial merge default-repos)))
+        hash      (-> deps-map* (:deps) (pr-str) (calc-hash))
+        out-file  (str build-dir "lib-layer-" hash ".zip")]
+    (when-not (file-exists? out-file)
+      (let [lib-map (deps/resolve-deps deps-map* {})
+            paths   (concat (lib-jars lib-map)
+                            (lib-dirs lib-map))]
+        (write-zip paths out-file)))
+    out-file))
 
-(defn- build-src ;; should hash here and get rid of write-src-zip
+(defn- build-src
   [deps-map build-dir aot]
-  (let [paths       (:paths deps-map)
-        classes-dir (str build-dir "classes/")
-        aot-nses    (concat ['stedi.lambda.entrypoint] aot)]
-    (clean-dir classes-dir)
-    (io/make-parents (io/file (str classes-dir ".")))
-    (binding [*compile-path* classes-dir]
-      (doseq [ns aot-nses]
-        (compile ns)))
-    (write-src-zip (concat paths [classes-dir])
-                   (str build-dir "src-"))))
+  (let [paths    (-> deps-map
+                     (:paths)
+                     (src-paths))
+        hash     (->> paths
+                      (mapv (juxt :path :last-modified))
+                      (cons aot)
+                      (pr-str)
+                      (calc-hash))
+        out-file (str build-dir "src-" hash ".zip")]
+    (when-not (file-exists? out-file)
+      (let [classes-dir (str build-dir "classes/")
+            aot-nses    (concat ['stedi.lambda.entrypoint] aot)]
+        (clean-dir classes-dir)
+        (io/make-parents (io/file (str classes-dir ".")))
+        (binding [*compile-path* classes-dir]
+          (doseq [ns aot-nses]
+            (compile ns)))
+        (write-zip (concat paths (src-paths [classes-dir])) out-file)))
+    out-file))
 
 (defn build
   [aot]
@@ -127,7 +119,3 @@
         build-dir "./target/cdk-artifacts/"]
     {:lib-layer (build-lib-layer deps-map build-dir)
      :src       (build-src deps-map build-dir aot)}))
-
-(comment
-  (build-layers [])
-  )
