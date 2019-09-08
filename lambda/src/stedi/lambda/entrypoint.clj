@@ -1,4 +1,4 @@
-(ns stedi.cdk.lambda.handler
+(ns stedi.lambda.entrypoint
   (:require [clojure.data.json :as json]
             [clojure.edn :as edn])
   (:gen-class
@@ -9,7 +9,7 @@
                        void]]))
 
 (defn- invoke-entrypoint [input]
-  (let [f (-> (System/getenv "STEDI_LAMBDA_ENTRYPOINT")
+  (let [f (-> (System/getenv "STEDI_LAMBDA_HANDLER")
               (edn/read-string)
               (requiring-resolve))]
     (f input)))

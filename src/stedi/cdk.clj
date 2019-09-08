@@ -2,11 +2,9 @@
   (:refer-clojure :exclude [require import])
   (:require [clojure.data.json :as json]
             [clojure.java.io :as io]
-            [clojure.walk :as walk]
             [stedi.cdk.impl :as impl]
             [stedi.cdk.import :as import]
-            [stedi.cdk.jsii.client :as client])
-  (:import (software.amazon.jsii JsiiObjectRef)))
+            [stedi.cdk.jsii.client :as client]))
 
 (defmacro import
   "Imports jsii classes and binds them to an alias. Allows for multiple
@@ -53,7 +51,7 @@
     `(def ~(with-meta name `{::impl/overrides ~overrides})
        (impl/wrap-class ~fqn (symbol ~fqs)))))
 
-(import ("@aws-cdk/core" App))
+(import ["@aws-cdk/core" App])
 
 (defmacro defapp
   "The @aws-cdk/core.App class is the main class for a CDK project.
@@ -83,4 +81,6 @@
   (alter-meta! #'App assoc :private false)
   `(let [app# (App {})]
      ((fn ~args ~@body) app#)
-     (def ~name app#)))
+     (def ~name
+       (doto app#
+         (App/synth)))))
