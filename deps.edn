@@ -1,5 +1,6 @@
 {:paths   ["resources" "src"]
- :deps    {org.clojure/tools.deps.alpha      {:mvn/version "0.7.541"}
+ :deps    {com.stuartsierra/dependency       {:mvn/version "0.2.0"}
+           org.clojure/tools.deps.alpha      {:mvn/version "0.7.541"}
            pack/pack.alpha                   {:git/url    "https://github.com/juxt/pack.alpha.git"
                                               :sha        "2769a6224bfb938e777906ea311b3daf7d2220f5"
                                               :exclusions [co.paralleluniverse/capsule
