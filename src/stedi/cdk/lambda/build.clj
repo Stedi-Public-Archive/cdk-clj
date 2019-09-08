@@ -99,6 +99,7 @@
 (defn- paths-hash
   [paths aot]
   (->> (mapcat (comp file-seq io/file) paths)
+       (filter #(.exists %))
        (remove #(.isDirectory %))
        (map (juxt #(.getPath %)
                   (comp #(hash-bytes %)

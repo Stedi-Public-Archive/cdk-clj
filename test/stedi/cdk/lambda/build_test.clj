@@ -79,4 +79,7 @@
           before   (build/build [] deps-map)]
       (let [after (build/build ['clojure.core] deps-map)]
         (is (not= (:src before)
-                  (:src after)))))))
+                  (:src after))))))
+
+  (testing "paths which don't exist don't break the build"
+    (is (build/build [] {:paths ["foobar"]}))))
