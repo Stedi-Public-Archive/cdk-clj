@@ -1,21 +1,26 @@
 (ns stedi.cdk.lambda.build
   (:require [clojure.java.io :as io]
+            [clojure.string :as string]
             [clojure.tools.deps.alpha :as deps]
             [clojure.tools.deps.alpha.reader :as deps.reader]
             [mach.pack.alpha.impl.elodin :as elodin]
             [mach.pack.alpha.impl.lib-map :as lib-map]
             [mach.pack.alpha.impl.vfs :as vfs])
-  (:import (java.security MessageDigest)))
+  (:import (java.nio.file Files)
+           (java.security MessageDigest)))
 
 (defonce digest-alg (MessageDigest/getInstance "MD5"))
 
-(defn- calc-hash
-  [s]
-  (->> s
-       (.getBytes)
+(defn- hash-bytes
+  [b]
+  (->> b
        (.digest digest-alg)
        (BigInteger. 1)
        (format "%032x")))
+
+(defn- hash-string
+  [s]
+  (hash-bytes (.getBytes s)))
 
 (defn- slurp-deps
   []
@@ -82,7 +87,7 @@
                       (select-keys [:deps])
                       (update :deps (partial merge lambda-entrypoint-deps))
                       (update :mvn/repos (partial merge default-repos)))
-        hash      (-> deps-map* (:deps) (pr-str) (calc-hash))
+        hash      (-> deps-map* (:deps) (pr-str) (hash-string))
         out-file  (str build-dir "lib-layer-" hash ".zip")]
     (when-not (file-exists? out-file)
       (let [lib-map (deps/resolve-deps deps-map* {})
@@ -91,16 +96,26 @@
         (write-zip paths out-file)))
     out-file))
 
+(defn- paths-hash
+  [paths aot]
+  (->> (mapcat (comp file-seq io/file) paths)
+       (remove #(.isDirectory %))
+       (map (juxt #(.getPath %)
+                  (comp #(hash-bytes %)
+                        #(Files/readAllBytes %)
+                        #(.toPath %))))
+       (map #(str (first %) "@" (second %)))
+       (sort)
+       (cons (pr-str aot))
+       (string/join "\n")
+       (hash-string)))
+
 (defn- build-src
   [deps-map build-dir aot]
   (let [paths    (-> deps-map
                      (:paths)
                      (src-paths))
-        hash     (->> paths
-                      (mapv (juxt :path :last-modified))
-                      (cons aot)
-                      (pr-str)
-                      (calc-hash))
+        hash     (paths-hash (:paths deps-map) aot)
         out-file (str build-dir "src-" hash ".zip")]
     (when-not (file-exists? out-file)
       (let [classes-dir (str build-dir "classes/")
@@ -114,8 +129,8 @@
     out-file))
 
 (defn build
-  [aot]
-  (let [deps-map  (slurp-deps)
-        build-dir "./target/cdk-artifacts/"]
-    {:lib-layer (build-lib-layer deps-map build-dir)
-     :src       (build-src deps-map build-dir aot)}))
+  ([aot] (build aot (slurp-deps)))
+  ([aot deps-map]
+   (let [build-dir "./target/cdk-artifacts/"]
+     {:lib-layer (build-lib-layer deps-map build-dir)
+      :src       (build-src deps-map build-dir aot)})))
