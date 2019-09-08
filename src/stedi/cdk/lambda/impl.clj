@@ -11,8 +11,6 @@
 
 (defonce digest-alg (MessageDigest/getInstance "MD5"))
 
-(defonce b64-encoder (Base64/getEncoder))
-
 (defn calc-hash
   [s]
   (->> s

@@ -6,5 +6,6 @@
            org.clojure/tools.deps.alpha        {:mvn/version "0.7.541"}
            com.amazonaws/aws-lambda-java-core  {:mvn/version "1.2.0"}
            pack/pack.alpha                     {:git/url "https://github.com/juxt/pack.alpha.git"
-                                                :sha     "2769a6224bfb938e777906ea311b3daf7d2220f5"}}
+                                                :sha     "2769a6224bfb938e777906ea311b3daf7d2220f5"}
+           stedi/cdk-lambda                    {:local/root "./lambda"}}
  :aliases {:dev {:extra-paths ["test"]}}}

@@ -1,9 +1,7 @@
 (ns stedi.cdk.lambda
   (:require [clojure.string :as string]
             [stedi.cdk :as cdk]
-            [stedi.cdk.lambda.impl :as impl])
-  (:import (java.security MessageDigest)
-           (java.util Base64)))
+            [stedi.cdk.lambda.build :as build]))
 
 (cdk/import ["@aws-cdk/core" Duration]
             ["@aws-cdk/aws-lambda" Function AssetCode Runtime LayerVersion])
@@ -17,21 +15,19 @@
     aot         - A list of namespaces to AOT compile
   "
   [parent id {:keys [fn environment handler aot]}]
-  (let [path                              (str (get-in parent [:node :path]) "/" id)
-        build-dir                         (str "./target/" (string/replace path "/" "_"))
-        {:keys [lib-layer aot-layer src]} (impl/build-layers build-dir aot)
-        function
-        (Function parent id
-                  {:code        (AssetCode src)
-                   :handler     (or handler "stedi.cdk.lambda.handler::handler")
-                   :runtime     (:JAVA_8 Runtime)
-                   :environment (merge environment
-                                       (when fn {"STEDI_LAMBDA_ENTRYPOINT" (-> fn symbol str)}))
-                   :memorySize  2048
-                   :timeout     (Duration/minutes 1)})]
-    (Function/addLayers function
-                        (LayerVersion function "lib-layer" {:code (AssetCode lib-layer)})
-                        (LayerVersion function "class-layer" {:code (AssetCode aot-layer)}))
+  (let [{:keys [lib-layer src]} (build/build aot)
+
+        env       (merge environment
+                         (when fn {"STEDI_LAMBDA_HANDLER" (-> fn symbol str)}))
+        function  (Function parent id
+                            {:code        (AssetCode src)
+                             :handler     (or handler "stedi.lambda.entrypoint::handler")
+                             :runtime     (:JAVA_8 Runtime)
+                             :environment env
+                             :memorySize  2048
+                             :timeout     (Duration/minutes 1)})
+        lib-layer (LayerVersion function "lib-layer" {:code (AssetCode lib-layer)})]
+    (Function/addLayers function lib-layer)
     function))
 
 (defn ^:deprecated clj
