@@ -1,15 +1,16 @@
-{:paths   ["resources" "src"]
- :deps    {com.stuartsierra/dependency       {:mvn/version "0.2.0"}
-           org.clojure/tools.deps.alpha      {:mvn/version "0.7.541"}
-           pack/pack.alpha                   {:git/url    "https://github.com/juxt/pack.alpha.git"
-                                              :sha        "2769a6224bfb938e777906ea311b3daf7d2220f5"
-                                              :exclusions [co.paralleluniverse/capsule
-                                                           com.google.cloud.tools/jib-core
-                                                           org.clojure/tools.cli
-                                                           org.clojure/tools.deps.alpha
-                                                           progrock/progrock
-                                                           rewrite-clj/rewrite-clj]}
-           software.amazon.jsii/jsii-runtime {:mvn/version "0.14.2"}
-           stedi/cdk-lambda                  {:local/root "./lambda"}}
+{:paths   ["resources" "src" "lambda/src"]
+ :deps    {com.stuartsierra/dependency        {:mvn/version "0.2.0"}
+           org.clojure/tools.deps.alpha       {:mvn/version "0.7.541"}
+           pack/pack.alpha                    {:git/url    "https://github.com/juxt/pack.alpha.git"
+                                               :sha        "2769a6224bfb938e777906ea311b3daf7d2220f5"
+                                               :exclusions [co.paralleluniverse/capsule
+                                                            com.google.cloud.tools/jib-core
+                                                            org.clojure/tools.cli
+                                                            org.clojure/tools.deps.alpha
+                                                            progrock/progrock
+                                                            rewrite-clj/rewrite-clj]}
+           software.amazon.jsii/jsii-runtime  {:mvn/version "0.14.2"}
+           com.amazonaws/aws-lambda-java-core {:mvn/version "1.2.0"}
+           org.clojure/data.json              {:mvn/version "0.2.6"}}
  :aliases {:dev {:extra-paths ["test"]
                  :extra-deps  {}}}}
