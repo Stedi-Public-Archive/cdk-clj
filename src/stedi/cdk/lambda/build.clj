@@ -85,6 +85,11 @@
         out-file   (str output-path-prefix hash ".zip")]
     (write-zip src-paths* out-file)))
 
+(defn- clean-dir
+  [dir]
+  (doseq [f (reverse (file-seq (io/file dir)))]
+    (io/delete-file f true)))
+
 (def ^:private default-repos
   {"central" {:url "https://repo1.maven.org/maven2/"}
    "clojars" {:url "https://repo.clojars.org/"}})
@@ -93,11 +98,6 @@
   {'stedi/cdk-lambda {:git/url   "git@github.com:stediinc/cdk-kit.git"
                       :deps/root "lambda"
                       :sha       "9466e86d88369eac43256c93d77d61814e035d5a"}})
-
-(defn- clean-dir
-  [dir]
-  (doseq [f (reverse (file-seq (io/file dir)))]
-    (io/delete-file f true)))
 
 (defn- build-lib-layer ;; should hash here and get rid of write-layer-zip
   [deps-map build-dir]
