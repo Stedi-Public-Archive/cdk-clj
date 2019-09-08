@@ -8,7 +8,8 @@
 
 (defn AppStack [app id]
   (let [stack    (Stack app id)
-        function (lambda/Clj stack "function" {:fn #'sample-app/handler})]
+        function (lambda/Clj stack "function" {:fn  #'sample-app/handler
+                                               :aot ['stedi.app.sample]})]
     (LambdaRestApi stack "api" {:handler function})))
 
 (cdk/defapp app
