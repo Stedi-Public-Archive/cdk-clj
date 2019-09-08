@@ -51,7 +51,7 @@
     `(def ~(with-meta name `{::impl/overrides ~overrides})
        (impl/wrap-class ~fqn (symbol ~fqs)))))
 
-(import ("@aws-cdk/core" App))
+(import ["@aws-cdk/core" App])
 
 (defmacro defapp
   "The @aws-cdk/core.App class is the main class for a CDK project.
