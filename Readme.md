@@ -7,14 +7,17 @@ stable. Nonetheless, we may still make minor changes to the API.
 
 ## Purpose
 
-The AWS CDK is "an open-source software development framework to define cloud
-infrastructure in code and provision it through AWS CloudFormation.
+From [AWS][1]:
 
-It offers a high-level object-oriented abstraction to define AWS resources
-imperatively using the power of modern programming languages. Using the CDK's
-library of infrastructure constructs, you can easily encapsulate AWS best
-practices in your infrastructure definition and share it without worrying about
-boilerplate logic."
+>The AWS Cloud Development Kit (AWS CDK) is an open-source software development 
+>framework to define cloud infrastructure in code and provision it through AWS 
+>CloudFormation.
+>
+>It offers a high-level object-oriented abstraction to define AWS resources
+>imperatively using the power of modern programming languages. Using the CDK's
+>library of infrastructure constructs, you can easily encapsulate AWS best
+>practices in your infrastructure definition and share it without worrying about
+>boilerplate logic.
 
 CDK is built on Amazon's [jsii][2] project, which allows TypeScript projects to
 be shared across Ruby, JavaScript, Java and C# via code generation.
