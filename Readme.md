@@ -7,20 +7,20 @@ stable. Nonetheless, we may still make minor changes to the API.
 
 ## Purpose
 
-AWS CDK is an AWS project that provides an interface for CloudFormation that
-allows infrastructure to be expressed in code rather than the provided YAML/JSON
-DSL. In addition to providing support for writing CloudFormation in code, CDK
-adds a higher-level layer of constructs that compose these primitives into
-reusable patterns that bake in best practices. These constructs can be extended
-to create reusable patterns to share common infrastructure across applications.
+The AWS CDK is "an open-source software development framework to define cloud
+infrastructure in code and provision it through AWS CloudFormation.
 
-CDK is built on Amazon's [jsii][2] project which allows TypeScript projects to
-be shared across Ruby, JavaScript, Java and C# via code generation. Because of
-the reach this enables, CDK is poised to become a nexus of AWS patterns and best
-practices accessible via familiar tools (e.g., mvn, npm, etc.).
+It offers a high-level object-oriented abstraction to define AWS resources
+imperatively using the power of modern programming languages. Using the CDK's
+library of infrastructure constructs, you can easily encapsulate AWS best
+practices in your infrastructure definition and share it without worrying about
+boilerplate logic."
 
-Clojure can tap into this ecosystem directly by consuming the `jsii` protocol
-and bringing infrastructure to the REPL. REPL-driven infrastructure turns a
+CDK is built on Amazon's [jsii][2] project, which allows TypeScript projects to
+be shared across Ruby, JavaScript, Java and C# via code generation.
+
+`cdk-clj` taps into this ecosystem directly by consuming the `jsii` protocol and
+bringing infrastructure to the REPL. REPL-driven infrastructure turns a
 frustrating practice with long feedback cycles into an enjoyable experience with
 immediate feedback and makes it possible for Clojure code to be deployed to AWS
 with minimal configuration.
