@@ -1,4 +1,4 @@
-# CDK Kit
+# cdk-clj
 
 This library is a Clojure wrapper for [AWS Cloud Development Kit (AWS CDK)][1].
 
@@ -49,7 +49,7 @@ npm install -g aws-cdk
 {:paths   ["src"]
  :deps    {org.clojure/clojure {:mvn/version "1.10.1"}}
  :aliases {:dev {:extra-paths ["cdk"]
-                 :extra-deps  {stedi/cdk-kit {:git/url "git@github.com:StediInc/cdk-kit.git"
+                 :extra-deps  {stedi/cdk-clj {:git/url "git@github.com:StediInc/cdk-clj.git"
                                               :sha     "5604792d04081aadbac5066a2dc0ba6031780a26"}}}}}
 ```
 
@@ -202,14 +202,14 @@ environment.
 
 ## License
 
-cdk-kit is distributed under the [Apache License, Version 2.0][apache-2].
+cdk-clj is distributed under the [Apache License, Version 2.0][apache-2].
 
 See [LICENSE](LICENSE) for more information.
 
 [1]: https://github.com/aws/aws-cdk
 [2]: https://github.com/aws/jsii
 [3]: https://docs.aws.amazon.com/cdk/api/latest/
-[4]: https://github.com/StediInc/cdk-kit/tree/master/example-app
+[4]: https://github.com/StediInc/cdk-clj/tree/master/example-app
 [5]: https://docs.aws.amazon.com/cdk/api/latest/docs/aws-construct-library.html
 
 [clojure]:   https://clojure.org/guides/getting_started
