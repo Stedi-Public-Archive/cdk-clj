@@ -284,6 +284,13 @@ given to the JVM.  If you're using a Node version or [virtual
 environment][nodeenv] manager, add the appropriate directory to the JVM
 environment.
 
+## License
+
+cdk-kit is distributed under the [Apache License, Version 2.0][apache-2].
+
+See [LICENSE](LICENSE) for more information.
+
+
 [1]: https://docs.aws.amazon.com/cdk/latest/guide/home.html
 [2]: https://github.com/aws/jsii
 [3]: https://docs.aws.amazon.com/cdk/api/latest/
@@ -292,3 +299,4 @@ environment.
 
 [jsii-404]: https://github.com/aws/jsii/blob/850f42bea4218f2563d221aff28926da16692f62/packages/jsii-java-runtime/project/src/main/java/software/amazon/jsii/JsiiRuntime.java#L220
 [nodeenv]: https://github.com/ekalinin/nodeenv
+[apache-2]: https://www.apache.org/licenses/LICENSE-2.0
