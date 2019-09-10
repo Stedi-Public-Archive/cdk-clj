@@ -39,7 +39,7 @@ npm install -g aws-cdk
  :deps    {org.clojure/clojure {:mvn/version "1.10.1"}}
  :aliases {:dev {:extra-paths ["cdk"]
                  :extra-deps  {stedi/cdk-kit {:git/url "git@github.com:StediInc/cdk-kit.git"
-                                              :sha     "86c264fdcbf1d27155122b8e2679b137bec7c3f6"}}}}}
+                                              :sha     "5604792d04081aadbac5066a2dc0ba6031780a26"}}}}}
 ```
 
 3. Create `./cdk/stedi/cdk/my_app.clj`:
@@ -50,16 +50,15 @@ npm install -g aws-cdk
             [stedi.cdk.lambda :as lambda]
             [stedi.my-app :as my-app]))
 
-(cdk/require ["@aws-cdk/core" cdk-core])
+(cdk/import ["@aws-cdk/core" Stack])
 
-(cdk/defextension stack cdk-core/Stack
-  :cdk/init
-  (fn [this]
-    (lambda/clj :cdk/create this "function"
-                {:fn #'my-app/echo})))
+(defn AppStack
+  [scope id props]
+  (let [stack (Stack scope id props)]
+    (lambda/Clj stack "my-fn" {:fn #'my-app/echo})))
 
 (cdk/defapp app [this]
-  (stack :cdk/create this "my-app-dev"))
+  (AppStack this "my-app-dev"))
 ```
 
 4. Open up a repl and `(require 'stedi.cdk.my-app)` this should create
@@ -122,47 +121,49 @@ There are two types introduced by this library `CDKClass` and
 Jsii protocol by implementing the `clojure.lang.ILookup` and
 `clojure.lang.IFn` interfaces:
 
-**Create an object from a class**
+**Instantiate an object from a class**
 
-```
+``` clojure
 ;; Creates a bucket based on the CDK class @aws-cdk/aws-s3.Bucket
-(cdk/require ["@aws-cdk/aws-s3" s3])
-(def bucket (s3/Bucket :cdk/create parent "my-bucket" {}))
+(cdk/import ["@aws-cdk/aws-s3" Bucket])
+(def bucket (Bucket parent "my-bucket" {}))
 ```
 
 **Get property of an object**
-```
+``` clojure
 ;; Gets the bucketArn property off of the bucket isntance
 (:bucketArn bucket)
 ```
 
 **Set property of an object**
-```
-;; TODO: no examples of mutable properties in CDK yet
+``` clojure
+;; TODO: not implemented yet
 ```
 
 **Call a method on an object**
-```
+``` clojure
 ;; Grants READ permission to the lambda-function object
-(bucket :grantRead lambda-function)
+(cdk/import ["@aws-cdk/aws-s3" Bucket])
+(Bucket/grantRead bucket lambda-function)
 ```
 
 **Get static property of a class**
-```
-(cdk/require ["@aws-cdk/aws-lambda" lambda])
+``` clojure
+(cdk/import ["@aws-cdk/aws-lambda" Runtime])
 ;; Get the JAVA8 runtime instance
-(:JAVA_8 lambda/Runtime)
+(:JAVA_8 Runtime)
 ```
 
 **Set static property of an object**
-```
-;; TODO: no examples of mutable properties in CDK yet
+``` clojure
+;; TODO: not implemented yet
 ```
 
 **Call static method on class**
-```
+``` clojure
+(cdk/import ["@aws-cdk/aws-lambda" Code])
 ;; Refer to the src directory as an asset to be uploaded
-(lambda/Code :asset "src")
+(Code/asset "src")
 ```
 
 ## Prerequisites
@@ -177,92 +178,6 @@ npm install -g aws-cdk
 
 ```
 brew update clojure
-```
-
-## Getting Started
-
-All CDK applications have a singleton root `App` construct. This root
-construct contains all of the stacks, constructs and resources in a
-project. This is provided via the `defapp` macro:
-
-```
-(require '[stedi.cdk :as cdk])
-(cdk/defapp app
-  [this]
-  ;; declare resources here
-  )
-```
-
-Invocation of the `defapp` macro will create an application based on
-evaluating the body of `defapp`. The first argument is the `App`
-construct itself and is used to wire in stacks as shown
-later. Additionly, evaluation of defapp will create a `cdk.json` file
-to configure the CDK CLI.
-
-Applications are composed of stacks which contain constitute
-CloudFormation-deployable units of infrastructure:
-
-```
-(require '[stedi.cdk :as cdk])
-
-(cdk/require ["@aws-cdk/core" cdk-core]) ; [1]
-
-(cdk/defapp app
-  [this]
-  (cdk-core/Stack :cdk/create this "DevStack" {}) ; [2]
-  )
-```
-
-(1) `cdk/require` loads the Jsii `@aws-cdk/core` module, creates an
-ephemeral namespace and binds it to `cdk-core` locally. This enables
-functionality like code completion to work with CDK. (2) instantiates
-a `Stack` class into an object and binds it to the `App` passed in as
-the first argument with `"DevStack"` as the `id`. This example is
-enough to register a deployable stack with CDK which should show up as
-`DevStack` when running `cdk ls`.
-
-Adding your first resource is as easy as using a built-in CDK
-construct:
-
-```
-(require '[stedi.cdk :as cdk])
-
-(cdk/require ["@aws-cdk/core" cdk-core]
-             ["@aws-cdk/aws-s3" s3])
-
-(cdk/defextends stack cdk-core/Stack ; [1]
-  :cdk/init
-  (fn [this])
-    (s3/Bucket :cdk/create this "MyBucket" {})) ; [2]
-
-(cdk/defapp app
-  [this]
-  (stack :cdk/create this "DevStack" {}) ; [3]
-  )
-```
-
-(1) shows the `defextends` macro which allows for extending the
-built-in CDK constructs. In this case we override initialization so
-that we can wire in a bucket construct (2) nested within the stack.
-(3) Our extended class construct is instantiated the same way as
-built-in constructs.
-
-`cdk/defapp`, `cdk/require` and `cdk/defextends` form the core API.
-
-## Special Methods and Properties
-
-Both `CDKObject` and `CDKClass` extend `ILookup` and `IFn`. There
-are special methods and properties `Stedi CDK` adds as developer
-conveniences:
-
-```
-;; Get the properties of a class as data
-(:cdk/definition SomeCDKClass)
-(:cdk/definition some-cdk-object-instance)
-
-;; Jump to the online documentation for a class
-(SomeCDKClass :cdk/browse)
-(some-cdk-object-instance :cdk/browse)
 ```
 
 ## Next Steps
