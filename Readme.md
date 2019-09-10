@@ -7,27 +7,30 @@ stable. Nonetheless, we may still make minor changes to the API.
 
 ## Purpose
 
-AWS CDK is an AWS project that provides an interface for CloudFormation that
-allows infrastructure to be expressed in code rather than the provided YAML/JSON
-DSL. In addition to providing support for writing CloudFormation in code, CDK
-adds a higher-level layer of constructs that compose these primitives into
-reusable patterns that bake in best practices. These constructs can be extended
-to create reusable patterns to share common infrastructure across applications.
+From [AWS][1]:
 
-CDK is built on Amazon's [jsii][2] project which allows TypeScript projects to
-be shared across Ruby, JavaScript, Java and C# via code generation. Because of
-the reach this enables, CDK is poised to become a nexus of AWS patterns and best
-practices accessible via familiar tools (e.g., mvn, npm, etc.).
+>The AWS Cloud Development Kit (AWS CDK) is an open-source software development 
+>framework to define cloud infrastructure in code and provision it through AWS 
+>CloudFormation.
+>
+>It offers a high-level object-oriented abstraction to define AWS resources
+>imperatively using the power of modern programming languages. Using the CDK's
+>library of infrastructure constructs, you can easily encapsulate AWS best
+>practices in your infrastructure definition and share it without worrying about
+>boilerplate logic.
 
-Clojure can tap into this ecosystem directly by consuming the `jsii` protocol
-and bringing infrastructure to the REPL. REPL-driven infrastructure turns a
+CDK is built on Amazon's [jsii][2] project, which allows TypeScript projects to
+be shared across Ruby, JavaScript, Java and C# via code generation.
+
+`cdk-clj` taps into this ecosystem directly by consuming the `jsii` protocol and
+bringing infrastructure to the REPL. REPL-driven infrastructure turns a
 frustrating practice with long feedback cycles into an enjoyable experience with
 immediate feedback and makes it possible for Clojure code to be deployed to AWS
 with minimal configuration.
 
 ## Prerequisites
 
-CDK Kit requires:
+`cdk-clj` requires:
 
 1. [Clojure][clojure]
 1. [Node.js][node-js]
@@ -123,9 +126,8 @@ consumed via an RPC protocol. This protocol exposes the ability to:
 
 CDK exposes its functionality via this API to allow non-JavaScript programming
 languages to benefit from the functionality it provides.
-
-CDK Kit maps these operations into Clojure friendly equivalents. The CDK library
-relies heavily on object oriented principles and CDK Kit does not shy away from
+`cdk-clj` maps these operations into Clojure friendly equivalents. The CDK library
+relies heavily on object oriented principles and `cdk-clj` does not shy away from
 those concepts. Instead, it embraces them and maps them into a Clojure-friendly
 interface. In doing so, it makes the [CDK documentation][3] directly mappable to
 Clojure.
@@ -206,7 +208,7 @@ cdk-clj is distributed under the [Apache License, Version 2.0][apache-2].
 
 See [LICENSE](LICENSE) for more information.
 
-[1]: https://github.com/aws/aws-cdk
+[1]: https://github.com/aws/aws-cdk#aws-cloud-development-kit-aws-cdk
 [2]: https://github.com/aws/jsii
 [3]: https://docs.aws.amazon.com/cdk/api/latest/
 [4]: https://github.com/StediInc/cdk-clj/tree/master/example-app
