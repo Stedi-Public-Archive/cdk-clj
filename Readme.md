@@ -1,38 +1,49 @@
-# Stedi CDK
+# CDK Kit
+
+This library is a Clojure wrapper for [AWS Cloud Development Kit (AWS CDK)][1].
+
+This is an alpha release. We use this library internally and consider it
+stable. Nonetheless, we may still make minor changes to the API.
 
 ## Purpose
 
-[CDK][1] is an AWS project that provides a wrapper for CloudFormation
-that allows infrastructure to be expressed in code rather than the
-provided YAML/JSON DSL. In addition to providing an interface to
-writing CloudFormation in code, CDK adds a higher-level layer of
-constructs that compose these primitives into reusable patterns that
-bake in best practices. These constructs can be extended to create
-even higher-level reusable patterns to share common infrastructure
-across applications.
+AWS CDK is an AWS project that provides an interface for CloudFormation that
+allows infrastructure to be expressed in code rather than the provided YAML/JSON
+DSL. In addition to providing support for writing CloudFormation in code, CDK
+adds a higher-level layer of constructs that compose these primitives into
+reusable patterns that bake in best practices. These constructs can be extended
+to create reusable patterns to share common infrastructure across applications.
 
-CDK is built on the Amazon [Jsii][2] project which allows TypeScript
-projects to be shared across Ruby, JavaScript, Java and C# via code
-generation. Because of the reach this enables, CDK is poised to become
-a nexus of AWS patterns and best practices accessible via familiar
-tools (mvn, npm, etc.).
+CDK is built on Amazon's [jsii][2] project which allows TypeScript projects to
+be shared across Ruby, JavaScript, Java and C# via code generation. Because of
+the reach this enables, CDK is poised to become a nexus of AWS patterns and best
+practices accessible via familiar tools (e.g., mvn, npm, etc.).
 
-Clojure can tap into this ecosystem directly by consuming the Jsii
-protocol and bringing infrastructure to the REPL. REPL-driven
-infrastructure turns a frustrating practice with long feedback cycles
-into an enjoyable experience with immediate feedback and grants the
-ability for Clojure code to be deployed to AWS with minimal
-configuration.
+Clojure can tap into this ecosystem directly by consuming the `jsii` protocol
+and bringing infrastructure to the REPL. REPL-driven infrastructure turns a
+frustrating practice with long feedback cycles into an enjoyable experience with
+immediate feedback and makes it possible for Clojure code to be deployed to AWS
+with minimal configuration.
+
+## Prerequisites
+
+CDK Kit requires:
+
+1. [Clojure][clojure]
+1. [Node.js][node-js]
+1. [AWS CDK CLI][cdk-cli]
 
 ## Quick Start
 
+0. Ensure you have configured appropriate [AWS Credentials][aws-creds].
+
 1. Install `aws-cdk`:
 
-``` clojure
+``` shell
 npm install -g aws-cdk
 ```
 
-2. Create a new directory with the following `deps.edn`:
+2. Create a new project directory with the following in a `deps.edn` file.
 
 ``` clojure
 {:paths   ["src"]
@@ -42,7 +53,7 @@ npm install -g aws-cdk
                                               :sha     "5604792d04081aadbac5066a2dc0ba6031780a26"}}}}}
 ```
 
-3. Create `./cdk/stedi/cdk/my_app.clj`:
+3. Create a CDK infrastructure file with the path `./cdk/stedi/cdk/my_app.clj`.
 
 ``` clojure
 (ns stedi.cdk.my-app
@@ -61,10 +72,14 @@ npm install -g aws-cdk
   (AppStack this "my-app-dev"))
 ```
 
-4. Open up a repl and `(require 'stedi.cdk.my-app)` this should create
-   a `cdk.json` file in the root of the project.
+4. Open up a REPL and evaluate the following form, which will create a
+   `cdk.json` file in the root of the project.
 
-5. Create `./src/stedi/my_app.clj`:
+```
+(require 'stedi.cdk.my-app)
+```
+
+5. Create a file for a application code with the path `./src/stedi/my_app.clj`:
 
 ``` clojure
 (ns stedi.my-app)
@@ -75,12 +90,12 @@ npm install -g aws-cdk
 
 6. List your stacks to verify correct configuration:
 
-```
+``` shell
 cdk ls
 # should return `my-app-dev`
 ```
 
-7. See the yaml this deployment will produce for cloudformation:
+7. See the YAML that this deployment will produce for CloudFormation:
 
 ```
 cdk synth my-app-dev
@@ -92,9 +107,9 @@ cdk synth my-app-dev
 cdk deploy my-app-dev
 ```
 
-## Approach
+## Implementation Details
 
-Jsii is a protocol that allows TypeScript classes and objects to be
+[jsii][2] is a protocol that allows TypeScript classes and objects to be
 consumed via an RPC protocol. This protocol exposes the ability to:
 
 - Create objects from classes with optionally overloaded methods
@@ -106,20 +121,19 @@ consumed via an RPC protocol. This protocol exposes the ability to:
 - Call static methods on classes
 - Respond to callbacks on overloaded objects
 
-CDK exposes its functionality via this API to allow non-javascript
-programming languages to benefit from the functionality it provides.
+CDK exposes its functionality via this API to allow non-JavaScript programming
+languages to benefit from the functionality it provides.
 
-`Stedi CDK` maps these operations into Clojure friendly
-equivalents. The CDK library relies heavily on object oriented
-principles and `Stedi CDK` does not shy away from those
-concepts. Instead, it embraces them and maps them into a
-Clojure-friendly interface. In doing so, it makes the [CDK
-documentation][3] directly mappable to Clojure.
+CDK Kit maps these operations into Clojure friendly equivalents. The CDK library
+relies heavily on object oriented principles and CDK Kit does not shy away from
+those concepts. Instead, it embraces them and maps them into a Clojure-friendly
+interface. In doing so, it makes the [CDK documentation][3] directly mappable to
+Clojure.
 
-There are two types introduced by this library `CDKClass` and
-`CDKObject`. Together, they expose all of the functionality of the
-Jsii protocol by implementing the `clojure.lang.ILookup` and
-`clojure.lang.IFn` interfaces:
+There are two types introduced by this library: `CDKClass` and
+`CDKObject`. Together, they expose all of the functionality of the `jsii`
+protocol by implementing the `clojure.lang.ILookup` and `clojure.lang.IFn`
+interfaces:
 
 **Instantiate an object from a class**
 
@@ -131,7 +145,7 @@ Jsii protocol by implementing the `clojure.lang.ILookup` and
 
 **Get property of an object**
 ``` clojure
-;; Gets the bucketArn property off of the bucket isntance
+;; Gets the bucketArn property off of the bucket instance
 (:bucketArn bucket)
 ```
 
@@ -166,37 +180,24 @@ Jsii protocol by implementing the `clojure.lang.ILookup` and
 (Code/asset "src")
 ```
 
-## Prerequisites
-
-**CDK CLI**
-
-```
-npm install -g aws-cdk
-```
-
-**Latest clojure.tools.deps**
-
-```
-brew update clojure
-```
-
 ## Next Steps
 
-* Check out the [example project][4] to see the minimum setup
-  required to get a Lambda deployed behind API Gateway
-* Check out the [CDK API Docs][5] to see what modules are available and
-  how to use them
+* Check out the [example project][4] to see the minimum setup required to get a
+  Lambda deployed behind API Gateway
+* Check out the [CDK API Docs][5] to see what modules are available and how to
+  use them
 
 ## Troubleshooting
 
 ### Cannot find the 'jsii-runtime' executable (JSII_RUNTIME or PATH)
+
 [This error][jsii-404] is non-specific and is raised on any failure to launch
 the runtime process, not just the missing executable named; that the causative
 exception is not chained makes this harder to debug.
 
-One possible cause is not having the **Node.js** executable (`node`) on the PATH
-given to the JVM.  If you're using a Node version or [virtual
-environment][nodeenv] manager, add the appropriate directory to the JVM
+One possible cause is not having the [Node.js][node-js] executable (i.e.,
+`node`) on the `PATH` given to the JVM. If you're using a Node version or
+[virtual environment][nodeenv] manager, add the appropriate directory to the JVM
 environment.
 
 ## License
@@ -205,13 +206,16 @@ cdk-kit is distributed under the [Apache License, Version 2.0][apache-2].
 
 See [LICENSE](LICENSE) for more information.
 
-
-[1]: https://docs.aws.amazon.com/cdk/latest/guide/home.html
+[1]: https://github.com/aws/aws-cdk
 [2]: https://github.com/aws/jsii
 [3]: https://docs.aws.amazon.com/cdk/api/latest/
 [4]: https://github.com/StediInc/cdk-kit/tree/master/example-app
 [5]: https://docs.aws.amazon.com/cdk/api/latest/docs/aws-construct-library.html
 
-[jsii-404]: https://github.com/aws/jsii/blob/850f42bea4218f2563d221aff28926da16692f62/packages/jsii-java-runtime/project/src/main/java/software/amazon/jsii/JsiiRuntime.java#L220
-[nodeenv]: https://github.com/ekalinin/nodeenv
-[apache-2]: https://www.apache.org/licenses/LICENSE-2.0
+[clojure]:   https://clojure.org/guides/getting_started
+[node-js]:   https://nodejs.org/en/
+[cdk-cli]:   https://docs.aws.amazon.com/cdk/latest/guide/tools.html
+[aws-creds]: https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html
+[jsii-404]:  https://github.com/aws/jsii/blob/850f42bea4218f2563d221aff28926da16692f62/packages/jsii-java-runtime/project/src/main/java/software/amazon/jsii/JsiiRuntime.java#L220
+[nodeenv]:   https://github.com/ekalinin/nodeenv
+[apache-2]:  https://www.apache.org/licenses/LICENSE-2.0
