@@ -208,7 +208,7 @@ cdk-clj is distributed under the [Apache License, Version 2.0][apache-2].
 
 See [LICENSE](LICENSE) for more information.
 
-[1]: https://github.com/aws/aws-cdk
+[1]: https://github.com/aws/aws-cdk#aws-cloud-development-kit-aws-cdk
 [2]: https://github.com/aws/jsii
 [3]: https://docs.aws.amazon.com/cdk/api/latest/
 [4]: https://github.com/StediInc/cdk-clj/tree/master/example-app
