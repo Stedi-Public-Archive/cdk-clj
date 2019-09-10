@@ -12,7 +12,7 @@ even higher-level reusable patterns to share common infrastructure
 across applications.
 
 CDK is built on the Amazon [Jsii][2] project which allows TypeScript
-projects to be shared across Ruby, Javascript, Java and C# via code
+projects to be shared across Ruby, JavaScript, Java and C# via code
 generation. Because of the reach this enables, CDK is poised to become
 a nexus of AWS patterns and best practices accessible via familiar
 tools (mvn, npm, etc.).
@@ -284,6 +284,13 @@ given to the JVM.  If you're using a Node version or [virtual
 environment][nodeenv] manager, add the appropriate directory to the JVM
 environment.
 
+## License
+
+cdk-kit is distributed under the [Apache License, Version 2.0][apache-2].
+
+See [LICENSE](LICENSE) for more information.
+
+
 [1]: https://docs.aws.amazon.com/cdk/latest/guide/home.html
 [2]: https://github.com/aws/jsii
 [3]: https://docs.aws.amazon.com/cdk/api/latest/
@@ -292,3 +299,4 @@ environment.
 
 [jsii-404]: https://github.com/aws/jsii/blob/850f42bea4218f2563d221aff28926da16692f62/packages/jsii-java-runtime/project/src/main/java/software/amazon/jsii/JsiiRuntime.java#L220
 [nodeenv]: https://github.com/ekalinin/nodeenv
+[apache-2]: https://www.apache.org/licenses/LICENSE-2.0
