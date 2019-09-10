@@ -12,7 +12,7 @@ even higher-level reusable patterns to share common infrastructure
 across applications.
 
 CDK is built on the Amazon [Jsii][2] project which allows TypeScript
-projects to be shared across Ruby, Javascript, Java and C# via code
+projects to be shared across Ruby, JavaScript, Java and C# via code
 generation. Because of the reach this enables, CDK is poised to become
 a nexus of AWS patterns and best practices accessible via familiar
 tools (mvn, npm, etc.).
