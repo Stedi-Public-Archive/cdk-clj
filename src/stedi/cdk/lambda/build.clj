@@ -77,7 +77,7 @@
    "clojars" {:url "https://repo.clojars.org/"}})
 
 (def ^:private lambda-entrypoint-deps
-  {'stedi/cdk-lambda {:git/url   "git@github.com:stediinc/cdk-kit.git"
+  {'stedi/cdk-lambda {:git/url   "git@github.com:stediinc/cdk-clj.git"
                       :deps/root "lambda"
                       :sha       "9466e86d88369eac43256c93d77d61814e035d5a"}})
 
