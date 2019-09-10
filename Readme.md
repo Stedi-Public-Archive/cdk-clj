@@ -30,7 +30,7 @@ with minimal configuration.
 
 ## Prerequisites
 
-CDK Kit requires:
+`cdk-clj` requires:
 
 1. [Clojure][clojure]
 1. [Node.js][node-js]
@@ -126,9 +126,8 @@ consumed via an RPC protocol. This protocol exposes the ability to:
 
 CDK exposes its functionality via this API to allow non-JavaScript programming
 languages to benefit from the functionality it provides.
-
-CDK Kit maps these operations into Clojure friendly equivalents. The CDK library
-relies heavily on object oriented principles and CDK Kit does not shy away from
+`cdk-clj` maps these operations into Clojure friendly equivalents. The CDK library
+relies heavily on object oriented principles and `cdk-clj` does not shy away from
 those concepts. Instead, it embraces them and maps them into a Clojure-friendly
 interface. In doing so, it makes the [CDK documentation][3] directly mappable to
 Clojure.
