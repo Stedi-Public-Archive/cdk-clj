@@ -14,18 +14,19 @@
     handler     - Only necessary if fn isn't specified
     aot         - A list of namespaces to AOT compile
   "
-  [parent id {:keys [fn environment handler aot]}]
+  [parent id {:keys [fn environment handler aot] :as props}]
   (let [{:keys [lib-layer src]} (build/build aot)
 
         env       (merge environment
                          (when fn {"STEDI_LAMBDA_HANDLER" (-> fn symbol str)}))
         function  (Function parent id
-                            {:code        (AssetCode src)
-                             :handler     (or handler "stedi.lambda.entrypoint::handler")
-                             :runtime     (:JAVA_8 Runtime)
-                             :environment env
-                             :memorySize  2048
-                             :timeout     (Duration/minutes 1)})
+                            (merge {:code        (AssetCode src)
+                                    :handler     (or handler "stedi.lambda.entrypoint::handler")
+                                    :runtime     (:JAVA_8 Runtime)
+                                    :environment env
+                                    :memorySize  2048
+                                    :timeout     (Duration/minutes 1)}
+                                   (dissoc props :environment :aot :fn)))
         lib-layer (LayerVersion function "lib-layer" {:code (AssetCode lib-layer)})]
     (Function/addLayers function lib-layer)
     function))
