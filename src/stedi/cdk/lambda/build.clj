@@ -84,7 +84,7 @@
 (defn- build-lib-layer
   [deps-map build-dir]
   (let [deps-map* (-> deps-map
-                      (select-keys [:deps])
+                      (select-keys [:deps :mvn/repos])
                       (update :deps (partial merge lambda-entrypoint-deps))
                       (update :mvn/repos (partial merge default-repos)))
         hash      (-> deps-map* (:deps) (pr-str) (hash-string))
