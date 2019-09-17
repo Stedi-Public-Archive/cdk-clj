@@ -9,6 +9,11 @@
     (io/delete-file file true))
   (io/make-parents "target/test/."))
 
+(defn- clean-artifact-dir
+  []
+  (doseq [file (reverse (file-seq (io/file "target/cdk-artifacts")))]
+    (io/delete-file file true)))
+
 (deftest build-test
   (testing "deps are cached in lib-layer"
     (let [deps-map {:deps {'org.clojure/clojure {:mvn/version "1.10.0"}}}
@@ -82,4 +87,15 @@
                   (:src after))))))
 
   (testing "paths which don't exist don't break the build"
-    (is (build/build [] {:paths ["foobar"]}))))
+    (is (build/build [] {:paths ["foobar"]})))
+
+  (testing "project mvn repos are honoured"
+    (let [deps (volatile! nil)]
+      (clean-artifact-dir)
+      (with-redefs [deps/resolve-deps
+                    (fn [deps-map _]
+                      (vreset! deps deps-map)
+                      {})]
+        (build/build [] {:paths ["target/test"] :mvn/repos {"a-repo" {:url "an-url"}}})
+        (is (= {:url "an-url"}
+               (-> @deps :mvn/repos (get "a-repo"))))))))
