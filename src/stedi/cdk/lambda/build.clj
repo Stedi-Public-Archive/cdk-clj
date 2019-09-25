@@ -96,8 +96,8 @@
         (write-zip paths out-file)))
     out-file))
 
-(defn- paths-hash
-  [paths aot]
+(defn- src-hash
+  [{:keys [paths deps]} aot]
   (->> (mapcat (comp file-seq io/file) paths)
        (filter #(.exists %))
        (remove #(.isDirectory %))
@@ -107,6 +107,7 @@
                         #(.toPath %))))
        (map #(str (first %) "@" (second %)))
        (sort)
+       (cons (str "deps@" (hash-string (str deps))))
        (cons (pr-str aot))
        (string/join "\n")
        (hash-string)))
@@ -116,7 +117,7 @@
   (let [paths    (-> deps-map
                      (:paths)
                      (src-paths))
-        hash     (paths-hash (:paths deps-map) aot)
+        hash     (src-hash deps-map aot)
         out-file (str build-dir "src-" hash ".zip")]
     (when-not (file-exists? out-file)
       (let [classes-dir (str build-dir "classes/")
