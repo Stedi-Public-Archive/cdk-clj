@@ -87,6 +87,16 @@
         (is (not= (:src before)
                   (:src after))))))
 
+  (testing "changes to dependencies invalidates src cache"
+    (clean-test-dir)
+    (spit "target/test/test.edn" (pr-str {:hello "world"}))
+    (let [deps-map {:paths ["target/test"]
+                    :deps '{org.clojure/clojure {:mvn/version "1.10.1"}}}
+          before   (build/build [] deps-map)]
+      (let [after (build/build [] (assoc-in deps-map [:deps 'org.clojure/clojure :mvn/version] "1.9.0"))]
+        (is (not= (:src before)
+                  (:src after))))))
+
   (testing "paths which don't exist don't break the build"
     (is (build/build [] {:paths ["foobar"]})))
 
