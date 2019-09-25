@@ -1,6 +1,7 @@
 (ns stedi.cdk.lambda.build-test
   (:require [clojure.java.io :as io]
-            [clojure.test :refer [deftest testing is]]
+            [clojure.test :as t :refer [deftest testing is]]
+            [clojure.tools.deps.alpha :as deps]
             [stedi.cdk.lambda.build :as build]))
 
 (defn- clean-test-dir
@@ -99,3 +100,8 @@
         (build/build [] {:paths ["target/test"] :mvn/repos {"a-repo" {:url "an-url"}}})
         (is (= {:url "an-url"}
                (-> @deps :mvn/repos (get "a-repo"))))))))
+
+(comment
+  (t/run-tests)
+
+  )
