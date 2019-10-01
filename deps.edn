@@ -1,6 +1,7 @@
 {:paths   ["resources" "src"]
- :deps    {com.stuartsierra/dependency       {:mvn/version "0.2.0"}
-           software.amazon.jsii/jsii-runtime {:mvn/version "0.14.2"}
-           org.clojure/data.json             {:mvn/version "0.2.6"}}
+ :deps    {com.stuartsierra/dependency         {:mvn/version "0.2.0"}
+           org.apache.commons/commons-compress {:mvn/version "1.19"}
+           org.clojure/data.json               {:mvn/version "0.2.6"}
+           software.amazon.jsii/jsii-runtime   {:mvn/version "0.14.2"}}
  :aliases {:dev {:extra-paths ["test"]
                  :extra-deps  {}}}}
