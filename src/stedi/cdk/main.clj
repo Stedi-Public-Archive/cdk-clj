@@ -2,4 +2,6 @@
 
 (defn -main [& [app-sym]]
   (let [app (requiring-resolve (symbol app-sym))]
-    (app :synth)))
+    (app :synth))
+  (shutdown-agents)
+  (System/exit 0))
