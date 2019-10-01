@@ -1,3 +1,0 @@
-{
-    "app": "clj -A:dev -m stedi.cdk.main stedi.cdk.app.sample/app"
-}

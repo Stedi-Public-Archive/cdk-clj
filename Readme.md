@@ -184,9 +184,7 @@ interfaces:
 
 ## Next Steps
 
-* Check out the [example project][4] to see the minimum setup required to get a
-  Lambda deployed behind API Gateway
-* Check out the [CDK API Docs][5] to see what modules are available and how to
+* Check out the [CDK API Docs][4] to see what modules are available and how to
   use them
 
 ## Troubleshooting
@@ -211,8 +209,7 @@ See [LICENSE](LICENSE) for more information.
 [1]: https://github.com/aws/aws-cdk#aws-cloud-development-kit-aws-cdk
 [2]: https://github.com/aws/jsii
 [3]: https://docs.aws.amazon.com/cdk/api/latest/
-[4]: https://github.com/StediInc/cdk-clj/tree/master/example-app
-[5]: https://docs.aws.amazon.com/cdk/api/latest/docs/aws-construct-library.html
+[4]: https://docs.aws.amazon.com/cdk/api/latest/docs/aws-construct-library.html
 
 [clojure]:   https://clojure.org/guides/getting_started
 [node-js]:   https://nodejs.org/en/
