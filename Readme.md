@@ -9,8 +9,8 @@ stable. Nonetheless, we may still make minor changes to the API.
 
 From [AWS][1]:
 
->The AWS Cloud Development Kit (AWS CDK) is an open-source software development 
->framework to define cloud infrastructure in code and provision it through AWS 
+>The AWS Cloud Development Kit (AWS CDK) is an open-source software development
+>framework to define cloud infrastructure in code and provision it through AWS
 >CloudFormation.
 >
 >It offers a high-level object-oriented abstraction to define AWS resources
@@ -201,6 +201,11 @@ One possible cause is not having the [Node.js][node-js] executable (i.e.,
 `node`) on the `PATH` given to the JVM. If you're using a Node version or
 [virtual environment][nodeenv] manager, add the appropriate directory to the JVM
 environment.
+
+## Contributing
+
+Contributors are welcome to submit issues, bug reports, and feature
+requests. Presently, we do not accept pull requests.
 
 ## License
 
