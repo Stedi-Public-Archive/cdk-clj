@@ -17,7 +17,8 @@
    (let [entrypoint (-> var (symbol) (str))
          jar-path   (lambda-build/target-zip entrypoint)]
      (when-not (.exists (io/file jar-path))
-       (throw (Exception. (format "Could not find lambda jar in expected location %s. Did you run `clj -m stedi.lambda.build`?"
+       (throw (Exception. (format (str "Could not find lambda jar in expected location %s.\n"
+                                       "Did you add stedi/lambda to :deps and run `clj -m stedi.lambda.build`?")
                                   jar-path))))
      (Function scope id (merge {:handler    "stedi.lambda.Entrypoint::handler"
                                 :runtime    (:JAVA_8 Runtime)
