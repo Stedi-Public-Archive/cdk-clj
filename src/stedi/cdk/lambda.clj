@@ -10,7 +10,10 @@
 (defn fn-from-var
   "Creates a @aws-cdk/aws-lambda.Function from a Clojure var. Includes
   sane defaults that can be overridden by passing in optional
-  `function-props`."
+  `function-props`.
+
+  For supported `function-props` see:
+  https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.FunctionProps.html"
   ([scope id var]
    (fn-from-var scope id var {}))
   ([scope id var function-props]
