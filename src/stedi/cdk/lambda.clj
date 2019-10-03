@@ -1,37 +1,31 @@
 (ns stedi.cdk.lambda
-  (:require [clojure.string :as string]
+  (:require [clojure.java.io :as io]
+            [clojure.string :as string]
             [stedi.cdk :as cdk]
-            [stedi.cdk.lambda.build :as build]))
+            [stedi.lambda.build :as lambda-build]))
 
 (cdk/import ["@aws-cdk/core" Duration]
-            ["@aws-cdk/aws-lambda" Function AssetCode Runtime LayerVersion])
+            ["@aws-cdk/aws-lambda" Code Runtime Function])
 
-(defn Clj
-  "Wraps `@aws-cdk/aws-clambda.Function` to be clojure friendly.
+(defn fn-from-var
+  "Creates a @aws-cdk/aws-lambda.Function from a Clojure var. Includes
+  sane defaults that can be overridden by passing in optional
+  `function-props`.
 
-    fn          - A var pointing to a handler function.
-    environment - A map of environment variables
-    handler     - Only necessary if fn isn't specified
-    aot         - A list of namespaces to AOT compile
-  "
-  [parent id {:keys [fn environment handler aot] :as props}]
-  (let [{:keys [lib-layer src]} (build/build aot)
-
-        env       (merge environment
-                         (when fn {"STEDI_LAMBDA_HANDLER" (-> fn symbol str)}))
-        function  (Function parent id
-                            (merge {:code        (AssetCode src)
-                                    :handler     (or handler "stedi.lambda.entrypoint::handler")
-                                    :runtime     (:JAVA_8 Runtime)
-                                    :environment env
-                                    :memorySize  2048
-                                    :timeout     (Duration/minutes 1)}
-                                   (dissoc props :environment :aot :fn)))
-        lib-layer (LayerVersion function "lib-layer" {:code (AssetCode lib-layer)})]
-    (Function/addLayers function lib-layer)
-    function))
-
-(defn ^:deprecated clj
-  "Deprecated in favor of `stedi.cdk.lambda/Clj`."
-  [_ parent id {:keys [fn environment handler aot] :as props}]
-  (Clj parent id props))
+  For supported `function-props` see:
+  https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.FunctionProps.html"
+  ([scope id var]
+   (fn-from-var scope id var {}))
+  ([scope id var function-props]
+   (let [entrypoint (-> var (symbol) (str))
+         jar-path   (lambda-build/target-zip entrypoint)]
+     (when-not (.exists (io/file jar-path))
+       (throw (Exception. (format (str "Could not find lambda jar in expected location %s.\n"
+                                       "Did you add stedi/lambda to :deps and run `clj -m stedi.lambda.build`?")
+                                  jar-path))))
+     (Function scope id (merge {:handler    "stedi.lambda.Entrypoint::handler"
+                                :runtime    (:JAVA_8 Runtime)
+                                :code       (Code/fromAsset jar-path)
+                                :memorySize 512
+                                :timeout    (Duration/seconds 30)}
+                               function-props)))))

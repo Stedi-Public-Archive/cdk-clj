@@ -1,5 +1,10 @@
-(ns stedi.app.sample)
+(ns stedi.app.sample
+  (:require [cheshire.core :as json]
+            [stedi.lambda :refer [defentrypoint]]))
 
-(defn handler [input]
-  {:statusCode 200
-   :body       "Hello world"})
+(defentrypoint handler
+  (fn [_]
+    {:output
+     (json/generate-string
+       {:statusCode 200
+        :body       "Hello world"})}))
