@@ -2,6 +2,7 @@
  :deps    {com.stuartsierra/dependency         {:mvn/version "0.2.0"}
            org.apache.commons/commons-compress {:mvn/version "1.19"}
            org.clojure/data.json               {:mvn/version "0.2.6"}
-           software.amazon.jsii/jsii-runtime   {:mvn/version "0.14.2"}}
- :aliases {:dev {:extra-paths ["test"]
-                 :extra-deps  {}}}}
+           software.amazon.jsii/jsii-runtime   {:mvn/version "0.14.2"}
+           stedi/lambda                        {:git/url "https://github.com/StediInc/lambda.git"
+                                                :sha     "ee07196da27ef251a29a5ac679c69e41be29bc8d"}}
+ :aliases {:dev {:extra-paths ["test"]}}}
