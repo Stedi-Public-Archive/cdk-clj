@@ -61,15 +61,15 @@ npm install -g aws-cdk
 ``` clojure
 (ns stedi.cdk.my-app
   (:require [stedi.cdk :as cdk]
-            [stedi.cdk.lambda :as lambda]
             [stedi.my-app :as my-app]))
 
-(cdk/import ["@aws-cdk/core" Stack])
+(cdk/import ["@aws-cdk/core" Stack]
+            ["@aws-cdk/aws-s3" Bucket)
 
 (defn AppStack
   [scope id props]
   (let [stack (Stack scope id props)]
-    (lambda/Clj stack "my-fn" {:fn #'my-app/echo})))
+    (Bucket stack "my-bucket" {:versioned true})))
 
 (cdk/defapp app [this]
   (AppStack this "my-app-dev"))
@@ -185,7 +185,7 @@ interfaces:
 ## Next Steps
 
 * Check out the [example project][4] to see the minimum setup required to get a
-  Lambda deployed behind API Gateway
+  [Lambda][stedilambda] deployed behind API Gateway
 * Check out the [CDK API Docs][5] to see what modules are available and how to
   use them
 
@@ -219,10 +219,11 @@ See [LICENSE](LICENSE) for more information.
 [4]: https://github.com/StediInc/cdk-clj/tree/master/example-app
 [5]: https://docs.aws.amazon.com/cdk/api/latest/docs/aws-construct-library.html
 
-[clojure]:   https://clojure.org/guides/getting_started
-[node-js]:   https://nodejs.org/en/
-[cdk-cli]:   https://docs.aws.amazon.com/cdk/latest/guide/tools.html
+[apache-2]: https://www.apache.org/licenses/LICENSE-2.0
 [aws-creds]: https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html
-[jsii-404]:  https://github.com/aws/jsii/blob/850f42bea4218f2563d221aff28926da16692f62/packages/jsii-java-runtime/project/src/main/java/software/amazon/jsii/JsiiRuntime.java#L220
-[nodeenv]:   https://github.com/ekalinin/nodeenv
-[apache-2]:  https://www.apache.org/licenses/LICENSE-2.0
+[cdk-cli]: https://docs.aws.amazon.com/cdk/latest/guide/tools.html
+[clojure]: https://clojure.org/guides/getting_started
+[jsii-404]: https://github.com/aws/jsii/blob/850f42bea4218f2563d221aff28926da16692f62/packages/jsii-java-runtime/project/src/main/java/software/amazon/jsii/JsiiRuntime.java#L220
+[node-js]: https://nodejs.org/en/
+[nodeenv]: https://github.com/ekalinin/nodeenv
+[stedilambda]: https://github.com/StediInc/lambda
