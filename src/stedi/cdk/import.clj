@@ -32,14 +32,14 @@
               {:doc      (render-docs docs)
                :arglists (list (mapv (comp symbol :name) parameters))})
             (fn [& args]
-              (let [cdk-class (impl/wrap-class fqn nil)]
+              (let [cdk-class (impl/wrap-class fqn)]
                 (apply impl/invoke-class cdk-class (keyword name) args))))
     (intern ns-sym
             (with-meta (symbol name)
               {:doc      (render-docs docs)
                :arglists (list (vec (cons 'this (mapv (comp symbol :name) parameters))))})
             (fn [this & args]
-              (apply this (keyword name) args)))))
+              (impl/invoke-object this (keyword name) args)))))
 
 (defn- intern-initializer
   [{:keys [ns-sym fqn parameters docs alias*] :as args}]
@@ -51,7 +51,7 @@
              :doc      (with-out-str
                          (println)
                          (clojure.pprint/pprint (manifest fqn)))})
-          (impl/wrap-class fqn nil)))
+          (impl/wrap-class fqn)))
 
 (defn- intern-enum-member
   [{:keys [ns-sym name fqn]}]

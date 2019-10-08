@@ -3,17 +3,19 @@
             [stedi.cdk.lambda :as lambda]
             [stedi.app.sample :as sample-app]))
 
-(cdk/import ["@aws-cdk/core" Stack]
+(cdk/import ["@aws-cdk/core" App Stack]
             ["@aws-cdk/aws-apigateway" LambdaRestApi]
             ["@aws-cdk/aws-lambda" Tracing])
 
-(defn AppStack [app id]
-  (let [stack    (Stack app id)
-        function (lambda/fn-from-var stack "function" #'sample-app/handler
-                                     {:tracing Tracing/ACTIVE})]
-    (LambdaRestApi stack "api" {:handler       function
-                                :deployOptions {:tracingEnabled true}})))
+(def app (App {}))
 
-(cdk/defapp app
-  [this]
-  (AppStack this "DevStack"))
+(def stack (Stack app "DevStack"))
+
+(def function
+  (lambda/fn-from-var stack "function" #'sample-app/handler
+                      {:tracing Tracing/ACTIVE}))
+
+(def api
+  (LambdaRestApi stack "api"
+                 {:handler       function
+                  :deployOptions {:tracingEnabled true}}))
