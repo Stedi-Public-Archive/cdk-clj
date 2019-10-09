@@ -1,10 +1,56 @@
 (ns stedi.cdk
   (:refer-clojure :exclude [require import])
-  (:require [clojure.data.json :as json]
+  (:require [clojure.java.browse :as browse]
+            [clojure.data.json :as json]
+            [clojure.string :as string]
             [clojure.java.io :as io]
             [stedi.cdk.impl :as impl]
             [stedi.cdk.import :as import]
             [stedi.cdk.jsii.client :as client]))
+
+(def ^:private docs-prefix
+  "https://docs.aws.amazon.com/cdk/api/latest/docs")
+
+(defn browse
+  "Browse to CDK documentation by CDK fqn, CDK object or CDK
+  class. Calling without any arguments opens the root documentation.
+
+  Examples:
+
+  ;; Opening module documentation
+  (cdk/browse \"@aws-cdk/core\") ;; open core module
+  (cdk/browse \"core\") ;; also opens core module
+
+  ;; Opening class documentation
+  (import [\"@aws-cdk/core\" Stack])
+
+  (cdk/browse \"@aws-cdk/aws-lambda.Stack\")
+  (cdk/browse Stack)   ;; can open docs from a class
+  (cdk/browse (Stack)) ;; can also open docs from an instance
+  "
+  ([] (browse/browse-url
+        (str docs-prefix "/aws-construct-library.html")))
+  ([obj-class-or-fqn]
+   (letfn [(cdk-class? [fqn]
+             (re-find #"\.[A-Za-z]+$" fqn))
+
+           (fqn->url [fqn]
+             (let [url-formatted-fqn
+                   (if (cdk-class? fqn)
+                     (string/replace fqn "/" "_")
+                     (str (string/replace fqn "@aws-cdk/" "")
+                          "-readme"))]
+               (format "%s/%s.html" docs-prefix url-formatted-fqn)))]
+     (browse/browse-url
+       (cond
+         (string? obj-class-or-fqn)
+         (fqn->url obj-class-or-fqn)
+
+         (instance? stedi.cdk.impl.CDKClass obj-class-or-fqn)
+         (browse (.-fqn obj-class-or-fqn))
+
+         (instance? stedi.cdk.impl.CDKObject obj-class-or-fqn)
+         (browse (.getFqn (.-object-ref obj-class-or-fqn))))))))
 
 (defmacro import
   "Imports jsii classes and binds them to an alias. Allows for multiple
