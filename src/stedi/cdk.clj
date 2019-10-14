@@ -4,7 +4,6 @@
             [clojure.data.json :as json]
             [clojure.string :as string]
             [clojure.java.io :as io]
-            [stedi.cdk.impl :as impl]
             [stedi.cdk.import :as import]
             [stedi.cdk.jsii.client :as client]))
 
@@ -57,7 +56,7 @@
   module requirement bindings.
 
   Example:
-  
+
   (cdk/import [\"@aws-cdk/aws-lambda\" Function Runtime])"
   [& imports]
   (let [fqn+alias (for [[module & classes] imports

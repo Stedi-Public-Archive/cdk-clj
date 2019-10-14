@@ -42,7 +42,7 @@
               (impl/invoke-object this (keyword name) args)))))
 
 (defn- intern-initializer
-  [{:keys [ns-sym fqn parameters docs alias*] :as args}]
+  [{:keys [fqn parameters alias*]}]
   (ns-unmap *ns* alias*)
   (intern *ns*
           (with-meta alias*
