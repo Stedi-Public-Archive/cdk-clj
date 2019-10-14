@@ -1,6 +1,5 @@
 (ns stedi.cdk.lambda
   (:require [clojure.java.io :as io]
-            [clojure.string :as string]
             [stedi.cdk :as cdk]
             [stedi.lambda.build :as lambda-build]))
 

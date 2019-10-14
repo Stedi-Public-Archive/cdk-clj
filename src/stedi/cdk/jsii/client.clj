@@ -3,9 +3,8 @@
             [clojure.walk :as walk]
             [stedi.cdk.jsii.modules :as modules])
   (:import (com.fasterxml.jackson.databind ObjectMapper)
-           (com.fasterxml.jackson.databind.node ArrayNode)
-           (software.amazon.jsii JsiiRuntime JsiiObjectRef JsiiCallbackHandler)
-           (software.amazon.jsii.api JsiiOverride Callback)))
+           (software.amazon.jsii JsiiRuntime JsiiObjectRef)
+           (software.amazon.jsii.api JsiiOverride)))
 
 (defonce ^:private object-mapper (ObjectMapper.))
 
