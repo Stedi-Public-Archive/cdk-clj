@@ -7,6 +7,17 @@
            (org.apache.commons.compress.archivers.tar TarArchiveInputStream)
            (software.amazon.jsii JsiiModule)))
 
+(defn- classpath-jsii-archives
+  []
+  (->> (-> (System/getProperty "java.class.path")
+           (string/split #":"))
+       (filter #(.endsWith % ".jar"))
+       (map io/file)
+       (map #(java.util.jar.JarFile. %))
+       (mapcat (comp enumeration-seq #(.entries %)))
+       (filter (comp #(.endsWith % "jsii.tgz") str))
+       (map str)))
+
 (defn- load-manifest [resource]
   (with-open [is (-> resource
                      (io/resource)
@@ -46,8 +57,7 @@
                (dep/graph))))
 
 (defn- fetch-all-modules* []
-  (->> (slurp (io/resource "jsii-modules.txt"))
-       (string/split-lines)
+  (->> (classpath-jsii-archives)
        (map from-resouce)
        (map (juxt #(get-in % [:props :module-name]) identity))
        (filter first)
