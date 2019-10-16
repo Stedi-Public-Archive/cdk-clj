@@ -46,14 +46,19 @@ with minimal configuration.
 npm install -g aws-cdk
 ```
 
-2. Create a new project directory with the following in a `deps.edn` file.
+2. Create a new project directory with the following in a `deps.edn`
+   file. You will also need to include the maven dependency for any
+   CDK modules you are using.
 
 ``` clojure
 {:paths   ["src"]
  :deps    {org.clojure/clojure {:mvn/version "1.10.1"}}
  :aliases {:dev {:extra-paths ["cdk"]
                  :extra-deps  {stedi/cdk-clj {:git/url "git@github.com:StediInc/cdk-clj.git"
-                                              :sha     "5604792d04081aadbac5066a2dc0ba6031780a26"}}}}}
+                                              :sha     "5604792d04081aadbac5066a2dc0ba6031780a26"}
+                               ;; Required in order to use the "@aws-cdk/aws-s3" module below
+                               software.amazon.awscdk/s3 {:mvn/version "1.12.0.DEVPREVIEW"}
+                               }}}}
 ```
 
 3. Create a CDK infrastructure file with the path `./cdk/stedi/cdk/my_app.clj`.
@@ -78,33 +83,24 @@ npm install -g aws-cdk
 4. Open up a REPL and evaluate the following form, which will create a
    `cdk.json` file in the root of the project.
 
-```
+``` clojure
 (require 'stedi.cdk.my-app)
 ```
 
-5. Create a file for a application code with the path `./src/stedi/my_app.clj`:
-
-``` clojure
-(ns stedi.my-app)
-
-(defn echo [input]
-  {:echoed input})
-```
-
-6. List your stacks to verify correct configuration:
+5. List your stacks to verify correct configuration:
 
 ``` shell
 cdk ls
 # should return `my-app-dev`
 ```
 
-7. See the YAML that this deployment will produce for CloudFormation:
+6. See the YAML that this deployment will produce for CloudFormation:
 
 ```
 cdk synth my-app-dev
 ```
 
-8. Deploy the stack to AWS:
+7. Deploy the stack to AWS:
 
 ```
 cdk deploy my-app-dev
