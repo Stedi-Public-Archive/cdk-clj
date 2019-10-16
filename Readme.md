@@ -47,8 +47,9 @@ npm install -g aws-cdk
 ```
 
 2. Create a new project directory with the following in a `deps.edn`
-   file. You will also need to include the maven dependency for any
-   CDK modules you are using.
+   file. You will also need to include the Maven dependency for any
+   CDK modules you are using. You can find all the available modules
+   [here][maven-deps].
 
 ``` clojure
 {:paths   ["src"]
@@ -223,3 +224,4 @@ See [LICENSE](LICENSE) for more information.
 [node-js]: https://nodejs.org/en/
 [nodeenv]: https://github.com/ekalinin/nodeenv
 [stedilambda]: https://github.com/StediInc/lambda
+[maven-deps]: https://mvnrepository.com/artifact/software.amazon.awscdk
