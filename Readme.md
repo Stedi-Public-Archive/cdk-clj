@@ -78,7 +78,7 @@ npm install -g aws-cdk
     (Bucket stack "my-bucket" {:versioned true})))
 
 (cdk/defapp app [this]
-  (AppStack this "my-app-dev"))
+  (AppStack this "my-app-dev" {}))
 ```
 
 4. Open up a REPL and evaluate the following form, which will create a
