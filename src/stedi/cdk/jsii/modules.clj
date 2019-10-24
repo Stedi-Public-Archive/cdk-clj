@@ -65,6 +65,10 @@
 
 (def ^:private fetch-all-modules (memoize fetch-all-modules*))
 
+(defn exists?
+  [module-name]
+  (boolean (get (fetch-all-modules) module-name)))
+
 (defn dependencies-for
   [module-name]
   (let [all-modules     (fetch-all-modules)

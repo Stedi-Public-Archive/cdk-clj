@@ -23,6 +23,8 @@
 
 (defn load-module [module-name]
   (let [module-name* (first (clojure.string/split module-name #"\."))
+        _            (assert (modules/exists? module-name*)
+                             (format "Unable to resolve CDK module: %s" module-name*))
         to-load      (modules/dependencies-for module-name*)]
     (doseq [{:keys [manifest module]} to-load]
       (when-not (@loaded-modules manifest)
