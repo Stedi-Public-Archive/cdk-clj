@@ -57,15 +57,17 @@
                                    :intern-args intern-args} e))))))))
 
 (defn- intern-initializer
-  [{:keys [fqn parameters alias*]}]
+  [{:keys [fqn parameters alias* ns-sym]}]
   (ns-unmap *ns* alias*)
+  (intern ns-sym
+          (with-meta alias*
+            {:arglists (list (mapv (comp symbol :name) parameters))})
+          (impl/wrap-class fqn))
   (intern *ns*
           (with-meta alias*
             {:arglists (list (mapv (comp symbol :name) parameters))
              :private  true
-             :doc      (with-out-str
-                         (println)
-                         (clojure.pprint/pprint (manifest fqn)))})
+             :doc      (format "See `%s/%s`" ns-sym alias*)})
           (impl/wrap-class fqn)))
 
 (defn- intern-enum-member

@@ -37,6 +37,13 @@
        (filter (comp #{module-name} #(get % "name")))
        (first)))
 
+(comment
+  (.requestResponse @jsii-runtime
+                    (.readTree object-mapper
+                               (json/write-str {"api" "create"})
+                               ))
+  )
+
 (defn- deserialize-refs [x]
   (walk/postwalk
     (fn [y]
