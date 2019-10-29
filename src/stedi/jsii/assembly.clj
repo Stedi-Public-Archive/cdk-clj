@@ -38,7 +38,7 @@
     (loop []
       (when-let [entry (.getNextTarEntry is)]
         (if (= (.getName entry) "package/.jsii")
-          (read-spec is)
+          (assoc (read-spec is) ::bundle (str "/" resource))
           (recur))))))
 
 (defn- load-all-assemblies
@@ -97,3 +97,14 @@
       (->> (all-types)
            (filter (comp #{fqn} :fqn))
            (first)))))
+
+(def get-assembly
+  (memoize
+    (fn [module-name]
+      (->> (load-all-assemblies)
+           (filter (comp #{module-name} :name))
+           (first)))))
+
+(comment
+  (get-assembly "@aws-cdk/core")
+  )

@@ -4,6 +4,12 @@
             [stedi.jsii.types :as types]
             [stedi.jsii.assembly :as assm]))
 
+(defmulti constructor-spec #(.-fqn (first %)))
+
+(s/def ::create-args
+  (s/multi-spec constructor-spec
+                (fn [x tag] (list (types/get-class tag) (second x)))))
+
 (s/def ::json
   (s/or :string string?
         :int integer?
