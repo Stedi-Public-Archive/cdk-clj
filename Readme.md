@@ -224,4 +224,4 @@ See [LICENSE](LICENSE) for more information.
 [node-js]: https://nodejs.org/en/
 [nodeenv]: https://github.com/ekalinin/nodeenv
 [stedilambda]: https://github.com/StediInc/lambda
-[maven-deps]: https://mvnrepository.com/artifact/software.amazon.awscdk
+[maven-deps]: https://search.maven.org/search?q=software.amazon.awscdk
