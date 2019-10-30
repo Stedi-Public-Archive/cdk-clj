@@ -26,35 +26,43 @@
 
 (defn- intern-method
   [{:keys [static parameters docs name ns-sym fqn] :as intern-args}]
-  (if static
-    (intern ns-sym
-            (with-meta (symbol name)
-              {:doc      (render-docs docs)
-               :arglists (list (mapv (comp symbol :name) parameters))})
-            (fn [& args]
-              (try
-                (let [cdk-class (impl/wrap-class fqn)]
-                  (apply impl/invoke-class cdk-class (keyword name) (or args [])))
-                (catch Exception e
-                  (throw (ex-info "static-method-call-failed"
-                                  {:class       fqn
-                                   :method-name name
-                                   :args        args
-                                   :intern-args intern-args} e))))))
-    (intern ns-sym
-            (with-meta (symbol name)
-              {:doc      (render-docs docs)
-               :arglists (list (vec (cons 'this (mapv (comp symbol :name) parameters))))})
-            (fn [this & args]
-              (try
-                (impl/invoke-object this (keyword name) (or args []))
-                (catch Exception e
-                  (throw (ex-info "instance-method-call-failed"
-                                  {:class       fqn
-                                   :instance    this
-                                   :method-name name
-                                   :args        args
-                                   :intern-args intern-args} e))))))))
+  (let [fn-meta {:static     static
+                 :parameters parameters
+                 :name       name
+                 :fqn        fqn}]
+    (if static
+      (intern ns-sym
+              (with-meta (symbol name)
+                {:doc      (render-docs docs)
+                 :arglists (list (mapv (comp symbol :name) parameters))})
+              (with-meta
+                (fn [& args]
+                  (try
+                    (let [cdk-class (impl/wrap-class fqn)]
+                      (apply impl/invoke-class cdk-class (keyword name) (or args [])))
+                    (catch Exception e
+                      (throw (ex-info "static-method-call-failed"
+                                      {:class       fqn
+                                       :method-name name
+                                       :args        args
+                                       :intern-args intern-args} e)))))
+                fn-meta))
+      (intern ns-sym
+              (with-meta (symbol name)
+                {:doc      (render-docs docs)
+                 :arglists (list (vec (cons 'this (mapv (comp symbol :name) parameters))))})
+              (with-meta
+                (fn [this & args]
+                  (try
+                    (impl/invoke-object this (keyword name) (or args []))
+                    (catch Exception e
+                      (throw (ex-info "instance-method-call-failed"
+                                      {:class       fqn
+                                       :instance    this
+                                       :method-name name
+                                       :args        args
+                                       :intern-args intern-args} e)))))
+                fn-meta)))))
 
 (defn- intern-initializer
   [{:keys [fqn parameters alias*]}]

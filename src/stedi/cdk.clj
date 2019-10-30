@@ -49,7 +49,13 @@
          (browse (.-fqn obj-class-or-fqn))
 
          (instance? stedi.cdk.impl.CDKObject obj-class-or-fqn)
-         (browse (.getFqn (.-object-ref obj-class-or-fqn))))))))
+         (browse (.getFqn (.-object-ref obj-class-or-fqn)))
+
+         (instance? clojure.lang.AFunction obj-class-or-fqn)
+         (browse (:fqn (meta obj-class-or-fqn)))
+
+         :else
+         (browse))))))
 
 (defmacro import
   "Imports jsii classes and binds them to an alias. Allows for multiple
