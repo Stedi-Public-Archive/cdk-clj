@@ -4,4 +4,7 @@
            stedi/lambda        {:git/url "https://github.com/StediInc/lambda.git"
                                 :sha     "ee07196da27ef251a29a5ac679c69e41be29bc8d"}}
  :aliases {:dev {:extra-paths ["cdk"]
-                 :extra-deps  {stedi/cdk-clj {:local/root "../"}}}}}
+                 :extra-deps
+                 {stedi/cdk-clj                     {:local/root "../"}
+                  software.amazon.awscdk/apigateway {:mvn/version "1.12.0.DEVPREVIEW"}
+                  software.amazon.awscdk/lambda     {:mvn/version "1.12.0.DEVPREVIEW"}}}}}

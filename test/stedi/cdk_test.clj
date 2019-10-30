@@ -8,12 +8,12 @@
 
 (deftest cdk-example-test
   (testing "instantiating an object"
-    (is (some? (Stack nil "my-stack"))))
+    (is (Stack nil "my-stack")))
   (testing "getting a property of an instance"
-    (is (some? (:region (Stack nil "my-stack")))))
+    (is (:region (Stack nil "my-stack"))))
   (testing "calling an instance method"
-    (is (some? (Stack/toString (Stack nil "my-stack")))))
+    (is (Stack/toString (Stack nil "my-stack"))))
   (testing "calling a static method"
     (is (Stack/isStack (Stack nil "my-stack"))))
   (testing "getting a static property of a class"
-    (is (some? (:JAVA_8 Runtime)))))
+    (is (:JAVA_8 Runtime))))
