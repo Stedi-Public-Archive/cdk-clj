@@ -63,7 +63,7 @@
   (let [{:keys [elementtype kind]} collection]
     (let [element-form (spec-form elementtype)]
       (case kind
-        "map"   `(s/map-of string? ~element-form)
+        "map"   `(s/map-of (s/or :string string? :kw keyword?) ~element-form)
         "array" `(s/coll-of ~element-form :kind vector?)))))
 
 (defn- prop-spec-k
