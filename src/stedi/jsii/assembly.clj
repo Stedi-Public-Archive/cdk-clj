@@ -104,7 +104,3 @@
       (->> (load-all-assemblies)
            (filter (comp #{module-name} :name))
            (first)))))
-
-(comment
-  (get-assembly "@aws-cdk/core")
-  )

@@ -1,16 +1,16 @@
 (ns stedi.cdk
-  (:refer-clojure :exclude [require import])
+  (:refer-clojure :exclude [import])
   (:require [clojure.java.browse :as browse]
             [clojure.data.json :as json]
             [clojure.string :as string]
             [clojure.java.io :as io]
-            [stedi.cdk.import :as import]
-            [stedi.cdk.jsii.client :as client]))
+            [stedi.jsii.import :as import]
+            [stedi.jsii.client :as client]))
 
 (def ^:private docs-prefix
   "https://docs.aws.amazon.com/cdk/api/latest/docs")
 
-(defn browse
+#_(defn browse
   "Browse to CDK documentation by CDK fqn, CDK object or CDK
   class. Calling without any arguments opens the root documentation.
 
@@ -63,7 +63,7 @@
                         class*             classes]
                     [(str module "." (name class*)) class*])]
     (doseq [[fqn alias*] fqn+alias]
-      (import/import-as-namespace fqn alias*))))
+      (import/import-fqn fqn alias*))))
 
 (defmacro defapp
   "The @aws-cdk/core.App class is the main class for a CDK project.

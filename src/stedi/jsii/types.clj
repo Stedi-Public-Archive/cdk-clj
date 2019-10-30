@@ -2,10 +2,31 @@
   (:require [clojure.data.json :as json]
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as sgen]
+            [clojure.string :as string]
             [clojure.walk :as walk]
             [stedi.jsii.assembly :as assm]
             [stedi.jsii.client :as client])
   (:import (software.amazon.jsii JsiiObjectRef)))
+
+;; TODO: s/ref/obj-id
+;; TODO: move to impl
+
+(defn fqn->kw
+  [fqn]
+  (-> fqn
+      (string/replace "@" "")
+      (string/replace "/" ".")
+      (string/split #"\.")
+      ((juxt butlast last))
+      (update 0 (partial string/join "."))
+      ((partial string/join "/"))
+      (keyword)))
+
+(defn fqn->sym
+  [fqn]
+  (let [x (fqn->kw fqn)]
+    (symbol (namespace x)
+            (name x))))
 
 (defn- jsii-type?
   [x]
@@ -82,6 +103,12 @@
                     (pr-str {:id    (.-ref this)
                              :props (props this)}))))
 
+(defn- call-initializer
+  [this args]
+  (let [sym  (fqn->sym (str (.-fqn this) ".-initializer"))
+        ctor (requiring-resolve sym)]
+    (apply ctor args)))
+
 (deftype JsiiClass [fqn]
   clojure.lang.ILookup
   (valAt [this k]
@@ -95,7 +122,19 @@
 
   Invocable
   (-invoke [_ {:keys [op args]}]
-    (->clj (client/call-static-method fqn (name op) (or args [])))))
+    (->clj (client/call-static-method fqn (name op) (or args []))))
+
+  clojure.lang.IFn
+  (applyTo [this arglist]
+    (call-initializer this arglist))
+  (invoke [this]
+    (call-initializer this []))
+  (invoke [this a1]
+    (call-initializer this [a1]))
+  (invoke [this a1 a2]
+    (call-initializer this [a1 a2]))
+  (invoke [this a1 a2 a3]
+    (call-initializer this [a1 a2 a3])))
 
 (defmethod print-method JsiiClass
   [this w]
@@ -145,10 +184,19 @@
         id  (client/create-object fqn (or args []))]
     (->JsiiObject fqn id)))
 
+(defn- base-classes
+  ([x] (base-classes x nil))
+  ([x classes]
+   (lazy-seq
+     (let [classes' (conj classes (.-fqn x))]
+       (if-let [base (:base (get-type-info x))]
+         (base-classes (get-class base) classes')
+         classes')))))
+
 (defn class-instance?
   [fqn x]
   (and (instance? JsiiObject x)
-       (= fqn (.-fqn x))))
+       (some #{fqn} (base-classes x))))
 
 (defn gen-class-instance
   [fqn]
@@ -170,10 +218,12 @@
 
 (defn gen-satisfies-interface
   [fqn]
-  (sgen/return (JsiiObject. fqn nil)))
+  (sgen/return
+    (->JsiiObject fqn nil)))
 
 (defn satisfies-interface?
   [fqn x]
   (and (instance? JsiiObject x)
-       (let [{:keys [interfaces]} (get-type-info x)]
-         (some #{fqn} interfaces))))
+       (or (= (.-fqn x) fqn)
+           (let [{:keys [interfaces]} (get-type-info x)]
+             (some #{fqn} interfaces)))))

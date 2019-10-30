@@ -4,12 +4,6 @@
             [stedi.jsii.types :as types]
             [stedi.jsii.assembly :as assm]))
 
-(defmulti constructor-spec #(.-fqn (first %)))
-
-(s/def ::create-args
-  (s/multi-spec constructor-spec
-                (fn [x tag] (list (types/get-class tag) (second x)))))
-
 (s/def ::json
   (s/or :string string?
         :int integer?
@@ -112,14 +106,18 @@
 (defn- method-spec-definition
   [{:keys [fqn]} {:keys [name parameters returns static]}]
   `(s/fdef ~(fqn->spec-sym (str fqn "." name))
-     :args (s/cat ~@(concat
-                      (when-not static
-                        (list :this (spec-form {:fqn fqn})))
-                      (mapcat (juxt (comp keyword :name)
-                                    (comp spec-form :type))
-                              parameters)))
-     :ret  ~(or (some-> returns (:type) (spec-form))
-                `nil?)))
+                :args (s/cat ~@(concat
+                                 (when-not static
+                                   (list :this (spec-form {:fqn fqn})))
+                                 (mapcat (juxt (comp keyword :name)
+                                               (fn [{:keys [optional] :as param}]
+                                                 (let [form (spec-form (:type param))]
+                                                   (if optional
+                                                     `(s/? ~form)
+                                                     form))))
+                                         parameters)))
+                :ret  ~(or (some-> returns (:type) (spec-form))
+                           `nil?)))
 
 (defn- prop-spec-definition
   [t prop]
@@ -127,10 +125,26 @@
      ~(spec-form (:type prop))))
 
 (defn- initializer-spec-definition
+  [{:keys [fqn]} {:keys [parameters]}]
+  `(s/fdef ~(fqn->spec-sym (str fqn ".-initializer"))
+     :args (s/cat ~@(mapcat (juxt (comp keyword :name)
+                                  (fn [{:keys [optional] :as param}]
+                                    (let [form (spec-form (:type param))]
+                                      (if optional
+                                        `(s/? ~form)
+                                        form))))
+                            parameters))
+     :ret  ~(fqn->spec-k fqn)))
+
+(defn- class-initializer-spec-definition
   [{:keys [fqn name]} {:keys [parameters]}]
   `(s/fdef ~(fqn->spec-sym (str fqn "." name))
      :args (s/cat ~@(mapcat (juxt (comp keyword :name)
-                                  (comp spec-form :type))
+                                  (fn [{:keys [optional] :as param}]
+                                    (let [form (spec-form (:type param))]
+                                      (if optional
+                                        `(s/? ~form)
+                                        form))))
                             parameters))
      :ret  ~(fqn->spec-k fqn)))
 
@@ -148,9 +162,12 @@
             :datatype  (datatype-spec-definition t)
             :interface (interface-spec-definition t))
 
-          initializer-definition (initializer-spec-definition t initializer)]
+          initializer-definition            (initializer-spec-definition t initializer)
+          class-initializer-spec-definition (class-initializer-spec-definition t initializer)]
       (doall
-        (concat (list type-definition initializer-definition)
+        (concat (list type-definition
+                      initializer-definition
+                      class-initializer-spec-definition)
                 (map (partial method-spec-definition t) methods)
                 (map (partial prop-spec-definition t) properties))))
     (catch Throwable e
@@ -177,15 +194,9 @@
                  (not (get-in ctx [:resolved ret])))
             [ret]))))
 
-(defn- spec-def-k
-  [definition]
-  (and (sequential? definition)
-       (= `s/def (first definition))
-       (second definition)))
-
 (defn- index-unresolved
   [ctx definition deps]
-  (let [k (spec-def-k definition)]
+  (let [k (second definition)]
     (-> (reduce
           (fn [ctx' dep]
             (update-in ctx' [:waiting-on dep]
@@ -221,7 +232,7 @@
   (try 
     (if-let [deps (unmet-deps ctx definition)]
       (index-unresolved ctx definition deps)
-      (let [k                      (spec-def-k definition)
+      (let [k                      (second definition)
             [updated-ctx resolved] (resolve-deps ctx k)]
         (-> updated-ctx
             (update :forms #(apply conj % definition resolved)))))
@@ -239,14 +250,5 @@
     (assert (empty? (:waiting-on ctx)) "Some forms couldn't be loaded")
     (dorun (map eval (reverse (:forms ctx))))))
 
-(comment
-  (time 
-    (do
-      (load-specs (assm/all-types))))
-
-  ;; Testing instrumentation
-  (do
-    (require 'clojure.spec.test.alpha)
-    (clojure.spec.test.alpha/instrument)
-    )
-  )
+;; Load all specs
+(load-specs (assm/all-types))
