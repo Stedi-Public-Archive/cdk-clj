@@ -107,18 +107,31 @@
        (s/keys :req-un ~req-un
                :opt-un ~opt-un))))
 
+(defn- method-arity-form
+  [parameters]
+  `(s/cat ~@(mapcat (juxt (comp keyword :name)
+                          (fn [{:keys [optional] :as param}]
+                            (let [form (spec-form (:type param))]
+                              (if optional
+                                `(s/nilable ~form)
+                                form))))
+                    parameters)))
+
 (defn- method-arg-spec-form
   [{:keys [fqn] :as t} {:keys [static parameters] :as method}]
-  `(s/cat ~@(concat
-              (when-not static
-                (list :this (spec-form {:fqn fqn})))
-              (mapcat (juxt (comp keyword :name)
-                            (fn [{:keys [optional] :as param}]
-                              (let [form (spec-form (:type param))]
-                                (if optional
-                                  `(s/? (s/nilable ~form))
-                                  form))))
-                      parameters))))
+  (let [arities* (assm/arities
+                   (concat (when-not static
+                             (list {:name "this"
+                                    :type {:fqn fqn}}))
+                           parameters))]
+    (if (= 1 (count arities*))
+      (method-arity-form parameters)
+      `(s/alt
+         ~@(mapcat
+             (fn [arity-params]
+               [(keyword (str "arity" (count arity-params)))
+                (method-arity-form arity-params)])
+             arities*)))))
 
 (defn- method-spec-definition
   [{:keys [fqn] :as t} {:keys [name returns] :as method}]

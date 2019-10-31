@@ -1,8 +1,6 @@
 (ns stedi.jsii.fqn
   (:require [clojure.string :as string]))
 
-;; TODO: pull in all naming concepts (implementation nses for example)
-
 (defn- tokenize
   [fqn & parts]
   (-> (string/join "." (concat [fqn] parts))

@@ -104,3 +104,19 @@
       (->> (load-all-assemblies)
            (filter (comp #{module-name} :name))
            (first)))))
+
+(defn arities
+  [parameters]
+  (let [base     (take-while (complement :optional) parameters)
+        optional (drop-while (complement :optional) parameters)]
+    (concat
+      (list base)
+      (for [n (map inc (range (count optional)))]
+        (concat base (take n optional))))))
+
+(defn arg-lists
+  [parameters]
+  (reverse
+    (into (list)
+          (map (partial mapv (comp symbol :name)))
+          (arities parameters))))
