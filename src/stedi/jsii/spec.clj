@@ -116,7 +116,7 @@
                             (fn [{:keys [optional] :as param}]
                               (let [form (spec-form (:type param))]
                                 (if optional
-                                  `(s/? ~form)
+                                  `(s/? (s/nilable ~form))
                                   form))))
                       parameters))))
 
