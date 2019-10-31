@@ -12,8 +12,8 @@
 (defonce ^:private loaded-modules (atom #{}))
 
 (defn- ->module [{:keys [module-name module-version module-bundle]}]
-  (let [module-proxy (get-proxy-class JsiiModule)]
-    (construct-proxy module-proxy module-name module-version module-proxy module-bundle)))
+  (let [this (proxy [JsiiModule] [module-name module-version nil module-bundle])]
+    (proxy [JsiiModule] [module-name module-version (class this) module-bundle])))
 
 (defn reset-runtime!
   []
