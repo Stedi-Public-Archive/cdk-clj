@@ -133,13 +133,13 @@
 
 (defn- initializer-spec-definition
   [{:keys [fqn] :as t} method]
-  `(s/fdef ~(fqn/fqn->qualified-symbol fqn "-initializer")
+  `(s/fdef ~(fqn/fqn->qualified-symbol fqn "impl" "-initializer")
      :args ~(method-arg-spec-form t (assoc method :static true))
      :ret  ~(fqn/fqn->qualified-keyword fqn)))
 
 (defn- class-initializer-spec-definition
   [{:keys [fqn name] :as t} method]
-  `(s/fdef ~(fqn/fqn->qualified-symbol fqn name)
+  `(s/fdef ~(fqn/fqn->qualified-symbol fqn "impl" name)
      :args ~(method-arg-spec-form t (assoc method :status true))
      :ret  ~(fqn/fqn->qualified-keyword fqn)))
 

@@ -78,7 +78,7 @@
 
 (defn- call-initializer
   [this args]
-  (let [sym  (fqn/fqn->qualified-symbol (.-fqn this) "-initializer")
+  (let [sym  (fqn/fqn->qualified-symbol (.-fqn this) "impl" "-initializer")
         ctor (requiring-resolve sym)]
     (apply ctor args)))
 
