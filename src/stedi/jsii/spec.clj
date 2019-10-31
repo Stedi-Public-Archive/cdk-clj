@@ -166,25 +166,6 @@
     (catch Throwable e
       (throw (ex-info "Unable to build spec definition" {:t t} e)))))
 
-(defn- get-ret
-  [form]
-  (second (drop-while #(not= :ret %) form)))
-
-(defn- unmet-deps
-  [definition]
-  (case (first definition)
-    clojure.spec.alpha/def
-    (let [spec-form (nth definition 2)]
-      (cond (and (qualified-keyword? spec-form)
-                 (not (s/get-spec spec-form)))
-            [spec-form]))
-
-    clojure.spec.alpha/fdef
-    (let [ret (get-ret definition)]
-      (cond (and (qualified-keyword? ret)
-                 (not (s/get-spec ret)))
-            [ret]))))
-
 (defn- index-spec-forms
   []
   (into {}
@@ -202,6 +183,9 @@
             deps       (->> (drop 2 definition)
                             (tree-seq seqable? seq)
                             (filter qualified-keyword?))]
+        ;; This is a little bit of a hack, it is possible for specs to
+        ;; have circular dependencies so we load the current spec with
+        ;; a placeholder before loading its dependencies.
         (eval `(s/def ~k any?))
         (dorun (map load-spec deps))
         (eval definition)))
