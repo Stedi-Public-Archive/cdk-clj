@@ -58,7 +58,7 @@
   [t prop]
   (fqn/fqn->qualified-keyword (:fqn t) (:name prop)))
 
-(defn- gen-class-instance
+(defn gen-class-instance
   [fqn]
   (sgen/return (impl/->JsiiObject fqn nil)))
 
@@ -68,7 +68,7 @@
      (s/spec (partial impl/class-instance? ~fqn)
              :gen (partial gen-class-instance ~fqn))))
 
-(defn- gen-enum-member
+(defn gen-enum-member
   [fqn]
   (sgen/bind
     (sgen/elements (impl/member-values fqn))
@@ -82,7 +82,7 @@
      (s/spec (partial impl/enum-member? ~fqn)
              :gen (partial gen-enum-member ~fqn))))
 
-(defn- gen-satisfies-interface
+(defn gen-satisfies-interface
   [fqn]
   (sgen/return
     (impl/->JsiiObject fqn nil)))
@@ -171,75 +171,38 @@
   (second (drop-while #(not= :ret %) form)))
 
 (defn- unmet-deps
-  [ctx definition]
+  [definition]
   (case (first definition)
     clojure.spec.alpha/def
     (let [spec-form (nth definition 2)]
       (cond (and (qualified-keyword? spec-form)
-                 (not (get-in ctx [:resolved spec-form])))
+                 (not (s/get-spec spec-form)))
             [spec-form]))
-    
+
     clojure.spec.alpha/fdef
     (let [ret (get-ret definition)]
       (cond (and (qualified-keyword? ret)
-                 (not (get-in ctx [:resolved ret])))
+                 (not (s/get-spec ret)))
             [ret]))))
 
-(defn- index-unresolved
-  [ctx definition deps]
-  (let [k (second definition)]
-    (-> (reduce
-          (fn [ctx' dep]
-            (update-in ctx' [:waiting-on dep]
-                       #(conj (or % #{}) k)))
-          ctx
-          deps)
-        (assoc-in [:definition k] definition)
-        (assoc-in [:deps k] (set deps)))))
+(defn- index-spec-forms
+  []
+  (into {}
+        (comp (mapcat spec-definitions)
+              (map (juxt second identity)))
+        (assm/all-types)))
 
-(defn- resolve-deps
-  [ctx new-k]
-  (-> (if-let [possibly-resolved-ks (get-in ctx [:waiting-on new-k])]
-        (reduce
-          (fn [[ctx' resolved] k]
-            (if-let [deps (-> ctx'
-                              (get-in [:deps k])
-                              (disj new-k)
-                              (not-empty))]
-              [(assoc-in ctx' [:deps k] deps)
-               resolved]
-              [(-> ctx'
-                   (update :resolved #(conj (or % #{}) k))
-                   (update :definition dissoc k)
-                   (update :deps dissoc k))
-               (conj resolved (get-in ctx' [:definition k]))]))
-          [(update ctx :waiting-on dissoc new-k) []]
-          possibly-resolved-ks)
-        [ctx []])
-      (update-in [0 :resolved] #(conj (or % #{}) new-k))))
+(defonce ^:private indexed-specs (index-spec-forms))
 
-(defn- load-definition
-  [ctx definition]
-  (try 
-    (if-let [deps (unmet-deps ctx definition)]
-      (index-unresolved ctx definition deps)
-      (let [k                      (second definition)
-            [updated-ctx resolved] (resolve-deps ctx k)]
-        (update updated-ctx :forms #(apply conj % definition resolved))))
-    (catch Exception e
-      (throw (ex-info "Error loading spec definition"
-                      {:ctx        ctx
-                       :definition definition}
-                      e)))))
-
-(defn- load-specs
-  [types]
-  (let [ctx (reduce load-definition {:resolved #{::json
-                                                 ::string-like}}
-                    (mapcat spec-definitions types))]
-    (select-keys ctx [:resolved :waiting-on])
-    (assert (empty? (:waiting-on ctx)) "Some forms couldn't be loaded")
-    (dorun (map eval (reverse (:forms ctx))))))
-
-;; Load all specs
-(load-specs (assm/all-types))
+(defn load-spec
+  [k]
+  (or (s/get-spec k)
+      (let [definition (or (get indexed-specs k)
+                           (throw (Exception. (str "No spec for k " k))))
+            deps       (->> (drop 2 definition)
+                            (tree-seq seqable? seq)
+                            (filter qualified-keyword?))]
+        (eval `(s/def ~k any?))
+        (dorun (map load-spec deps))
+        (eval definition)))
+  true)
