@@ -6,7 +6,6 @@
 
 (defn- intern-initializer
   [impl-ns-sym alias-sym c]
-  (ns-unmap impl-ns-sym alias-sym)
   (let [fqs
         (symbol
           (intern impl-ns-sym '-initializer
@@ -15,8 +14,7 @@
     (spec/load-spec fqs)
     (stest/instrument fqs)
     (intern impl-ns-sym alias-sym c)
-    (spec/load-spec (symbol (name impl-ns-sym) (name alias-sym))))
-  (refer impl-ns-sym :only [alias-sym]))
+    (spec/load-spec (symbol (name impl-ns-sym) (name alias-sym)))))
 
 (defn- intern-methods
   [target-ns-sym methods c]
@@ -43,29 +41,34 @@
 
 (defn import-fqn
   [fqn alias-sym]
-  (let [target-ns-sym (fqn/fqn->ns-sym fqn)]
+  (let [target-ns-sym (fqn/fqn->ns-sym fqn)
+        impl-ns-sym   (symbol (str target-ns-sym ".impl"))]
     (when-not (find-ns target-ns-sym)
-      (let [impl-ns-sym (symbol (str target-ns-sym ".impl"))
-            c           (impl/get-class fqn)
+      (let [c (impl/get-class fqn)
 
             {:keys [methods members]} (impl/get-type-info c)]
         (create-ns target-ns-sym)
         (create-ns impl-ns-sym)
-        (ns-unmap *ns* alias-sym)
+        (ns-unmap impl-ns-sym alias-sym)
         (intern-initializer impl-ns-sym alias-sym c)
         (intern-methods target-ns-sym methods c)
         (intern-enum-members target-ns-sym members c)))
-    (alias alias-sym target-ns-sym)))
+    (ns-unmap *ns* alias-sym)
+    (alias alias-sym target-ns-sym)
+    (refer impl-ns-sym :only [alias-sym])))
 
 (comment
+  (import-fqn "@aws-cdk/core.App" 'App)
   (import-fqn "@aws-cdk/core.Stack" 'Stack)
   (import-fqn "@aws-cdk/aws-lambda.Function" 'Function)
   (import-fqn "@aws-cdk/aws-lambda.Runtime" 'Runtime)
   (import-fqn "@aws-cdk/aws-lambda.Tracing" 'Tracing)
   (import-fqn "@aws-cdk/aws-lambda.Code" 'Code)
-
+  
   (let [stack (Stack)]
-    (Function stack "hello" {:code    (Code/fromAsset "src")
-                             :handler "hello"
-                             :runtime (:JAVA_8 Runtime)}))
+    (Function stack
+              "hello"
+              {:code    (Code/fromAsset "src")
+               :handler "hello"
+               :runtime (:JAVA_8 Runtime)}))
   )
