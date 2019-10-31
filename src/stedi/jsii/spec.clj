@@ -140,7 +140,7 @@
 (defn- class-initializer-spec-definition
   [{:keys [fqn name] :as t} method]
   `(s/fdef ~(fqn/fqn->qualified-symbol fqn "impl" name)
-     :args ~(method-arg-spec-form t (assoc method :status true))
+     :args ~(method-arg-spec-form t (assoc method :static true))
      :ret  ~(fqn/fqn->qualified-keyword fqn)))
 
 (defn- spec-definitions
