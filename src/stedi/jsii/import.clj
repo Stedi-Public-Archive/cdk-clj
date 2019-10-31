@@ -43,26 +43,29 @@
 
 (defn import-fqn
   [fqn alias-sym]
-  (let [target-ns     (-> fqn (fqn/fqn->ns-sym) (create-ns))
-        target-ns-sym (ns-name target-ns)
-        impl-ns-sym   (ns-name (create-ns (symbol (str target-ns ".impl"))))
-        c             (impl/get-class fqn)
+  (let [target-ns-sym (fqn/fqn->ns-sym fqn)]
+    (when-not (find-ns target-ns-sym)
+      (let [impl-ns-sym (symbol (str target-ns-sym ".impl"))
+            c           (impl/get-class fqn)
 
-        {:keys [methods members]} (impl/get-type-info c)]
-    (ns-unmap *ns* alias-sym)
-    (intern-initializer impl-ns-sym alias-sym c)
-    (intern-methods target-ns-sym methods c)
-    (intern-enum-members target-ns-sym members c)
+            {:keys [methods members]} (impl/get-type-info c)]
+        (create-ns target-ns-sym)
+        (create-ns impl-ns-sym)
+        (ns-unmap *ns* alias-sym)
+        (intern-initializer impl-ns-sym alias-sym c)
+        (intern-methods target-ns-sym methods c)
+        (intern-enum-members target-ns-sym members c)))
     (alias alias-sym target-ns-sym)))
 
 (comment
   (import-fqn "@aws-cdk/core.Stack" 'Stack)
   (import-fqn "@aws-cdk/aws-lambda.Function" 'Function)
   (import-fqn "@aws-cdk/aws-lambda.Runtime" 'Runtime)
+  (import-fqn "@aws-cdk/aws-lambda.Tracing" 'Tracing)
   (import-fqn "@aws-cdk/aws-lambda.Code" 'Code)
 
   (let [stack (Stack)]
     (Function stack "hello" {:code    (Code/fromAsset "src")
-                             :handler "Hello"
+                             :handler "hello"
                              :runtime (:JAVA_8 Runtime)}))
   )
