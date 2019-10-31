@@ -1,32 +1,12 @@
-(ns stedi.jsii.types
+(ns stedi.jsii.impl
   (:require [clojure.data.json :as json]
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as sgen]
-            [clojure.string :as string]
             [clojure.walk :as walk]
             [stedi.jsii.assembly :as assm]
-            [stedi.jsii.client :as client])
+            [stedi.jsii.client :as client]
+            [stedi.jsii.fqn :as fqn])
   (:import (software.amazon.jsii JsiiObjectRef)))
-
-;; TODO: s/ref/obj-id
-;; TODO: move to impl
-
-(defn fqn->kw
-  [fqn]
-  (-> fqn
-      (string/replace "@" "")
-      (string/replace "/" ".")
-      (string/split #"\.")
-      ((juxt butlast last))
-      (update 0 (partial string/join "."))
-      ((partial string/join "/"))
-      (keyword)))
-
-(defn fqn->sym
-  [fqn]
-  (let [x (fqn->kw fqn)]
-    (symbol (namespace x)
-            (name x))))
 
 (defn- jsii-type?
   [x]
@@ -34,7 +14,7 @@
        (string? (ffirst x))
        (.startsWith (ffirst x) "$jsii")))
 
-(defmulti ->type ffirst)
+(defmulti ^:private ->type ffirst)
 
 (defn- ->clj
   [m]
@@ -52,13 +32,6 @@
   [t]
   (assm/get-type (.-fqn t)))
 
-(defn- member-values
-  [fqn]
-  (->> (:members (assm/get-type fqn))
-       (map :name)
-       (map keyword)
-       (set)))
-
 (defn- props
   [x]
   (into #{}
@@ -66,7 +39,7 @@
               (map keyword))
         (:properties (get-type-info x))))
 
-(deftype JsiiObject [fqn ref]
+(deftype JsiiObject [fqn objId]
   clojure.lang.ILookup
   (valAt [this k]
     (let [valid-props (props this)
@@ -75,11 +48,11 @@
               (throw (ex-info "Invalid property"
                               {:k           k
                                :valid-props valid-props})))]
-      (->clj (client/get-property-value ref (name value)))))
+      (->clj (client/get-property-value objId (name value)))))
 
   Invocable
   (-invoke [_ {:keys [op args]}]
-    (->clj (client/call-method ref (name op) (or args []))))
+    (->clj (client/call-method objId (name op) (or args []))))
 
   java.lang.Object
   (toString [this]
@@ -89,7 +62,7 @@
 
   json/JSONWriter
   (-write [object out]
-    (.write out (format "{\"$jsii.byref\": \"%s\"}" ref))))
+    (.write out (format "{\"$jsii.byref\": \"%s\"}" objId))))
 
 (defmethod ->type "$jsii.byref"
   [x]
@@ -100,12 +73,12 @@
 (defmethod print-method JsiiObject
   [this w]
   (.write w (format "#jsii-object[%s]"
-                    (pr-str {:id    (.-ref this)
+                    (pr-str {:id    (.-objId this)
                              :props (props this)}))))
 
 (defn- call-initializer
   [this args]
-  (let [sym  (fqn->sym (str (.-fqn this) ".-initializer"))
+  (let [sym  (fqn/fqn->qualified-symbol (.-fqn this) "-initializer")
         ctor (requiring-resolve sym)]
     (apply ctor args)))
 
@@ -153,6 +126,8 @@
   (.write w (format "#jsii-enum-member[%s]"
                     (pr-str (str (.-fqn this) "/" (name (.-value this)))))))
 
+(declare member-values)
+
 (deftype JsiiEnumClass [fqn]
   clojure.lang.ILookup
   (valAt [_ k]
@@ -170,19 +145,7 @@
                     (pr-str {:fqn     (.-fqn this)
                              :members (member-values (.-fqn this))}))))
 
-(defn get-class
-  [fqn]
-  (let [{:keys [kind]} (or (assm/get-type fqn)
-                           (throw (Exception. (str "No class available for fqn: " fqn))))]
-    (case kind
-      "enum"  (->JsiiEnumClass fqn)
-      "class" (->JsiiClass fqn))))
-
-(defn create
-  [c args]
-  (let [fqn (.-fqn c)
-        id  (client/create-object fqn (or args []))]
-    (->JsiiObject fqn id)))
+(declare get-class)
 
 (defn- base-classes
   ([x] (base-classes x nil))
@@ -193,33 +156,41 @@
          (base-classes (get-class base) classes')
          classes')))))
 
+;;------------------------------------------------------------------------------
+
+(defn create
+  [c args]
+  (let [fqn (.-fqn c)
+        id  (client/create-object fqn (or args []))]
+    (->JsiiObject fqn id)))
+
+(defn get-class
+  [fqn]
+  (let [{:keys [kind]}
+        (or (assm/get-type fqn)
+            (throw (Exception.
+                     (str "No class available for fqn: " fqn))))]
+    (case kind
+      "enum"  (->JsiiEnumClass fqn)
+      "class" (->JsiiClass fqn))))
+
+(defn member-values
+  [fqn]
+  (->> (:members (assm/get-type fqn))
+       (map :name)
+       (map keyword)
+       (set)))
+
 (defn class-instance?
   [fqn x]
   (and (instance? JsiiObject x)
        (some #{fqn} (base-classes x))))
-
-(defn gen-class-instance
-  [fqn]
-  (sgen/return (JsiiObject. fqn nil)))
 
 (defn enum-member?
   [fqn x]
   (and (instance? JsiiEnumMember x)
        (= fqn (.-fqn x))
        ((member-values fqn) (.-value x))))
-
-(defn gen-enum-member
-  [fqn]
-  (sgen/bind
-    (sgen/elements (member-values fqn))
-    (fn [value]
-      (sgen/return
-        (JsiiEnumMember. fqn value)))))
-
-(defn gen-satisfies-interface
-  [fqn]
-  (sgen/return
-    (->JsiiObject fqn nil)))
 
 (defn satisfies-interface?
   [fqn x]

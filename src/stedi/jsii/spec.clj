@@ -1,39 +1,27 @@
 (ns stedi.jsii.spec
   (:require [clojure.spec.alpha :as s]
-            [clojure.string :as string]
-            [stedi.jsii.types :as types]
-            [stedi.jsii.assembly :as assm]))
+            [clojure.spec.gen.alpha :as sgen]
+            [stedi.jsii.assembly :as assm]
+            [stedi.jsii.impl :as impl]
+            [stedi.jsii.fqn :as fqn]))
+
+(s/def ::string-like
+  (s/or :string string?
+        :keyword keyword?))
 
 (s/def ::json
-  (s/or :string string?
+  (s/or :string ::string-like
         :int integer?
         :float float?
         :boolean boolean?
         :vector (s/coll-of ::json-value :kind vector?)
-        :map (s/map-of string? ::json-value)))
+        :map (s/map-of ::string-like ::json-value)))
 
 (defn- metatype
   [{:keys [datatype kind]}]
   (cond
     datatype :datatype
     :else    (keyword kind)))
-
-(defn- fqn->spec-k
-  [fqn]
-  (-> fqn
-      (string/replace "@" "")
-      (string/replace "/" ".")
-      (string/split #"\.")
-      ((juxt butlast last))
-      (update 0 (partial string/join "."))
-      ((partial string/join "/"))
-      (keyword)))
-
-(defn- fqn->spec-sym
-  [fqn]
-  (let [x (fqn->spec-k fqn)]
-    (symbol (namespace x)
-            (name x))))
 
 (defmulti ^:private spec-form ffirst)
 
@@ -46,7 +34,7 @@
 
 (defmethod spec-form :fqn
   [{:keys [fqn]}]
-  (fqn->spec-k fqn))
+  (fqn/fqn->qualified-keyword fqn))
 
 (defmethod spec-form :primitive
   [{:keys [primitive]}]
@@ -63,31 +51,47 @@
   (let [{:keys [elementtype kind]} collection]
     (let [element-form (spec-form elementtype)]
       (case kind
-        "map"   `(s/map-of (s/or :string string? :kw keyword?) ~element-form)
+        "map"   `(s/map-of ::string-like ~element-form)
         "array" `(s/coll-of ~element-form :kind vector?)))))
 
 (defn- prop-spec-k
   [t prop]
-  (fqn->spec-k
-    (str (:fqn t) "." (:name prop))))
+  (fqn/fqn->qualified-keyword (:fqn t) (:name prop)))
+
+(defn- gen-class-instance
+  [fqn]
+  (sgen/return (impl/->JsiiObject fqn nil)))
 
 (defn- class-spec-definition
   [{:keys [fqn]}]
-  `(s/def ~(fqn->spec-k fqn)
-     (s/spec (partial types/class-instance? ~fqn)
-             :gen (partial types/gen-class-instance ~fqn))))
+  `(s/def ~(fqn/fqn->qualified-keyword fqn)
+     (s/spec (partial impl/class-instance? ~fqn)
+             :gen (partial gen-class-instance ~fqn))))
+
+(defn- gen-enum-member
+  [fqn]
+  (sgen/bind
+    (sgen/elements (impl/member-values fqn))
+    (fn [value]
+      (sgen/return
+        (impl/->JsiiEnumMember fqn value)))))
 
 (defn- enum-spec-definition
   [{:keys [fqn]}]
-  `(s/def ~(fqn->spec-k fqn)
-     (s/spec (partial types/enum-member? ~fqn)
-             :gen (partial types/gen-enum-member ~fqn))))
+  `(s/def ~(fqn/fqn->qualified-keyword fqn)
+     (s/spec (partial impl/enum-member? ~fqn)
+             :gen (partial gen-enum-member ~fqn))))
+
+(defn- gen-satisfies-interface
+  [fqn]
+  (sgen/return
+    (impl/->JsiiObject fqn nil)))
 
 (defn- interface-spec-definition
   [{:keys [fqn]}]
-  `(s/def ~(fqn->spec-k fqn)
-     (s/spec (partial types/satisfies-interface? ~fqn)
-             :gen (partial types/gen-satisfies-interface ~fqn))))
+  `(s/def ~(fqn/fqn->qualified-keyword fqn)
+     (s/spec (partial impl/satisfies-interface? ~fqn)
+             :gen (partial gen-satisfies-interface ~fqn))))
 
 (defn- datatype-spec-definition
   [{:keys [fqn properties] :as t}]
@@ -99,25 +103,28 @@
                      (comp (filter :optional)
                            (map (partial prop-spec-k t)))
                      properties)]
-    `(s/def ~(fqn->spec-k fqn)
+    `(s/def ~(fqn/fqn->qualified-keyword fqn)
        (s/keys :req-un ~req-un
                :opt-un ~opt-un))))
 
+(defn- method-arg-spec-form
+  [{:keys [fqn] :as t} {:keys [static parameters] :as method}]
+  `(s/cat ~@(concat
+              (when-not static
+                (list :this (spec-form {:fqn fqn})))
+              (mapcat (juxt (comp keyword :name)
+                            (fn [{:keys [optional] :as param}]
+                              (let [form (spec-form (:type param))]
+                                (if optional
+                                  `(s/? ~form)
+                                  form))))
+                      parameters))))
+
 (defn- method-spec-definition
-  [{:keys [fqn]} {:keys [name parameters returns static]}]
-  `(s/fdef ~(fqn->spec-sym (str fqn "." name))
-                :args (s/cat ~@(concat
-                                 (when-not static
-                                   (list :this (spec-form {:fqn fqn})))
-                                 (mapcat (juxt (comp keyword :name)
-                                               (fn [{:keys [optional] :as param}]
-                                                 (let [form (spec-form (:type param))]
-                                                   (if optional
-                                                     `(s/? ~form)
-                                                     form))))
-                                         parameters)))
-                :ret  ~(or (some-> returns (:type) (spec-form))
-                           `nil?)))
+  [{:keys [fqn] :as t} {:keys [name returns] :as method}]
+  `(s/fdef ~(fqn/fqn->qualified-symbol fqn name)
+                :args ~(method-arg-spec-form t method)
+                :ret  ~(or (some-> returns (:type) (spec-form)) `nil?)))
 
 (defn- prop-spec-definition
   [t prop]
@@ -125,36 +132,22 @@
      ~(spec-form (:type prop))))
 
 (defn- initializer-spec-definition
-  [{:keys [fqn]} {:keys [parameters]}]
-  `(s/fdef ~(fqn->spec-sym (str fqn ".-initializer"))
-     :args (s/cat ~@(mapcat (juxt (comp keyword :name)
-                                  (fn [{:keys [optional] :as param}]
-                                    (let [form (spec-form (:type param))]
-                                      (if optional
-                                        `(s/? ~form)
-                                        form))))
-                            parameters))
-     :ret  ~(fqn->spec-k fqn)))
+  [{:keys [fqn] :as t} method]
+  `(s/fdef ~(fqn/fqn->qualified-symbol fqn "-initializer")
+     :args ~(method-arg-spec-form t (assoc method :static true))
+     :ret  ~(fqn/fqn->qualified-keyword fqn)))
 
 (defn- class-initializer-spec-definition
-  [{:keys [fqn name]} {:keys [parameters]}]
-  `(s/fdef ~(fqn->spec-sym (str fqn "." name))
-     :args (s/cat ~@(mapcat (juxt (comp keyword :name)
-                                  (fn [{:keys [optional] :as param}]
-                                    (let [form (spec-form (:type param))]
-                                      (if optional
-                                        `(s/? ~form)
-                                        form))))
-                            parameters))
-     :ret  ~(fqn->spec-k fqn)))
+  [{:keys [fqn name] :as t} method]
+  `(s/fdef ~(fqn/fqn->qualified-symbol fqn name)
+     :args ~(method-arg-spec-form t (assoc method :status true))
+     :ret  ~(fqn/fqn->qualified-keyword fqn)))
 
 (defn- spec-definitions
   [t]
   (try
-    (let [{:keys [initializer
-                  methods
-                  properties]} t
-          
+    (let [{:keys [initializer methods properties]} t
+
           type-definition
           (case (metatype t)
             :class     (class-spec-definition t)
@@ -171,9 +164,7 @@
                 (map (partial method-spec-definition t) methods)
                 (map (partial prop-spec-definition t) properties))))
     (catch Throwable e
-      (throw (ex-info "Unable to build spec definition"
-                      {:t t}
-                      e)))))
+      (throw (ex-info "Unable to build spec definition" {:t t} e)))))
 
 (defn- get-ret
   [form]
@@ -234,17 +225,17 @@
       (index-unresolved ctx definition deps)
       (let [k                      (second definition)
             [updated-ctx resolved] (resolve-deps ctx k)]
-        (-> updated-ctx
-            (update :forms #(apply conj % definition resolved)))))
+        (update updated-ctx :forms #(apply conj % definition resolved))))
     (catch Exception e
       (throw (ex-info "Error loading spec definition"
                       {:ctx        ctx
                        :definition definition}
                       e)))))
 
-(defn load-specs
+(defn- load-specs
   [types]
-  (let [ctx (reduce load-definition {:resolved #{::json}}
+  (let [ctx (reduce load-definition {:resolved #{::json
+                                                 ::string-like}}
                     (mapcat spec-definitions types))]
     (select-keys ctx [:resolved :waiting-on])
     (assert (empty? (:waiting-on ctx)) "Some forms couldn't be loaded")

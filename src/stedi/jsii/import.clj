@@ -1,50 +1,55 @@
 (ns stedi.jsii.import
   (:require [clojure.spec.test.alpha :as stest]
-            [clojure.string :as string]
-            [stedi.jsii.types :as types]
+            [stedi.jsii.fqn :as fqn]
+            [stedi.jsii.impl :as impl]
             [stedi.jsii.spec]))
 
-(defn- fqn->ns-sym
-  [fqn]
-  (-> fqn
-      (string/replace "@" "")
-      (string/replace "/" ".")
-      (string/split #"\.")
-      ((partial string/join "."))
-      (symbol)))
+;; TODO: hide implementation function in impl namespace
+;; TODO: delay loading of specs until used
+
+(defn- intern-initializer
+  [target-ns-sym alias-sym c]
+  (let [fqs
+        (symbol
+          (intern target-ns-sym '-initializer
+                  (fn [& args]
+                    (impl/create c args))))]
+      (stest/instrument fqs)
+      (intern target-ns-sym alias-sym c))
+  (refer target-ns-sym :only [alias-sym]))
+
+(defn- intern-methods
+  [target-ns-sym methods c]
+  (doseq [{:keys [static] :as method} methods]
+    (let [method-sym (-> method (:name) (symbol))
+          fqs
+          (symbol
+            (intern target-ns-sym method-sym
+                    (fn [& args]
+                      (impl/-invoke
+                        (if static c (first args))
+                        {:op   method-sym
+                         :args (if static args (rest args))}))))]
+      (stest/instrument fqs))))
+
+(defn- intern-enum-members
+  [target-ns-sym members c]
+  (doseq [member members]
+    (let [member-sym  (-> member (:name) (symbol))
+          member-k    (keyword member-sym)
+          enum-member (get c member-k)]
+      (intern target-ns-sym member-sym enum-member))))
 
 (defn import-fqn
   [fqn alias-sym]
-  (let [target-ns (-> fqn (fqn->ns-sym) (create-ns))
-        ns-sym    (ns-name target-ns)
+  (let [target-ns     (-> fqn (fqn/fqn->ns-sym) (create-ns))
+        target-ns-sym (ns-name target-ns)
+        c             (impl/get-class fqn)
 
-        c                 (types/get-class fqn)
-        {:keys [methods
-                members]} (types/get-type-info c)]
+        {:keys [methods members]} (impl/get-type-info c)]
     (ns-unmap *ns* alias-sym)
     (ns-unmap target-ns alias-sym)
-    (let [fqs
-          (symbol
-            (intern target-ns '-initializer
-                    (fn [& args]
-                      (types/create c args))))]
-      (stest/instrument fqs)
-      (intern target-ns alias-sym c))
-    (refer ns-sym :only [alias-sym])
-    (doseq [{:keys [static] :as method} methods]
-      (let [method-sym (-> method (:name) (symbol))
-            fqs
-            (symbol
-              (intern target-ns method-sym
-                      (fn [& args]
-                        (types/-invoke
-                          (if static c (first args))
-                          {:op   method-sym
-                           :args (if static args (rest args))}))))]
-        (stest/instrument fqs)))
-    (doseq [member members]
-      (let [member-sym  (-> member (:name) (symbol))
-            member-k    (keyword member-sym)
-            enum-member (get c member-k)]
-        (intern target-ns member-sym enum-member)))
-    (alias alias-sym ns-sym)))
+    (intern-initializer target-ns-sym alias-sym c)
+    (intern-methods target-ns-sym methods c)
+    (intern-enum-members target-ns-sym members c)
+    (alias alias-sym target-ns-sym)))
