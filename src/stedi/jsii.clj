@@ -4,6 +4,11 @@
             [stedi.jsii.impl :as impl]
             [stedi.jsii.import :as import]))
 
+(defn get-class
+  "Gets the jsii class for a given fqn."
+  [fqn]
+  (impl/get-class fqn))
+
 (defn jsii-primitive?
   "Returns true if x is a jsii primitive."
   [x]

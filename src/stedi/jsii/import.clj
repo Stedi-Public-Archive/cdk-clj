@@ -33,7 +33,10 @@
           (symbol
             (intern target-ns-sym
                     (with-meta method-sym
-                      {:arglists (assm/arg-lists parameters)})
+                      {:arglists (assm/arg-lists
+                                   (concat (when-not static
+                                             (list {:name "this"}))
+                                           parameters))})
                     (fn [& args]
                       (impl/-invoke
                         (if static c (first args))

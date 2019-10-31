@@ -125,7 +125,7 @@
                                     :type {:fqn fqn}}))
                            parameters))]
     (if (= 1 (count arities*))
-      (method-arity-form parameters)
+      (method-arity-form (first arities*))
       `(s/alt
          ~@(mapcat
              (fn [arity-params]
