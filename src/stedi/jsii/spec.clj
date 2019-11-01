@@ -110,11 +110,11 @@
 (defn- method-arity-form
   [parameters]
   `(s/cat ~@(mapcat (juxt (comp keyword :name)
-                          (fn [{:keys [optional] :as param}]
+                          (fn [{:keys [optional variadic] :as param}]
                             (let [form (spec-form (:type param))]
-                              (if optional
-                                `(s/nilable ~form)
-                                form))))
+                              (cond optional `(s/nilable ~form)
+                                    variadic  `(s/* ~form)
+                                    :default form))))
                     parameters)))
 
 (defn- method-arg-spec-form
