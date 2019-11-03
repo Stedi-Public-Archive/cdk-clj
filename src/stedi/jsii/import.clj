@@ -67,17 +67,16 @@
 (defn import-fqn
   [fqn alias-sym]
   (let [target-ns-sym (fqn/fqn->ns-sym fqn)
-        impl-ns-sym   (symbol (str target-ns-sym ".impl"))]
-    (when-not (find-ns target-ns-sym)
-      (let [c (impl/get-class fqn)
+        impl-ns-sym   (symbol (str target-ns-sym ".impl"))
+        c             (impl/get-class fqn)
 
-            {:keys [methods members]} (impl/get-type-info c)]
-        (create-ns target-ns-sym)
-        (create-ns impl-ns-sym)
-        (ns-unmap impl-ns-sym alias-sym)
-        (intern-initializer impl-ns-sym alias-sym c)
-        (intern-methods target-ns-sym methods c)
-        (intern-enum-members target-ns-sym members c)))
+        {:keys [methods members]} (impl/get-type-info c)]
+    (create-ns target-ns-sym)
+    (create-ns impl-ns-sym)
+    (ns-unmap impl-ns-sym alias-sym)
+    (intern-initializer impl-ns-sym alias-sym c)
+    (intern-methods target-ns-sym methods c)
+    (intern-enum-members target-ns-sym members c)
     (ns-unmap *ns* alias-sym)
     (alias alias-sym target-ns-sym)
     (refer impl-ns-sym :only [alias-sym])))
