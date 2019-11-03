@@ -113,14 +113,3 @@
       (list base)
       (for [n (map inc (range (count optional)))]
         (concat base (take n optional))))))
-
-(defn arg-lists
-  [parameters]
-  (reverse
-    (into (list)
-          (map (partial into []
-                        (mapcat (fn [{:keys [variadic name]}]
-                                  (if variadic
-                                    (list '& (symbol name))
-                                    (list (symbol name)))))))
-          (arities parameters))))

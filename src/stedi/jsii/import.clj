@@ -5,6 +5,17 @@
             [stedi.jsii.impl :as impl]
             [stedi.jsii.spec :as spec]))
 
+(defn- arg-lists
+  [parameters]
+  (reverse
+    (into (list)
+          (map (partial into []
+                        (mapcat (fn [{:keys [variadic name]}]
+                                  (if variadic
+                                    (list '& (symbol name))
+                                    (list (symbol name)))))))
+          (assm/arities parameters))))
+
 (defn- intern-initializer
   [impl-ns-sym alias-sym c]
   (let [fqs
@@ -20,7 +31,7 @@
     (stest/instrument fqs)
     (intern impl-ns-sym
             (with-meta alias-sym
-              {:arglists (assm/arg-lists parameters)})
+              {:arglists (arg-lists parameters)})
             c)
     (spec/load-spec (symbol (name impl-ns-sym) (name alias-sym)))))
 
@@ -33,7 +44,7 @@
           (symbol
             (intern target-ns-sym
                     (with-meta method-sym
-                      {:arglists (assm/arg-lists
+                      {:arglists (arg-lists
                                    (concat (when-not static
                                              (list {:name "this"}))
                                            parameters))})

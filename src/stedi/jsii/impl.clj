@@ -1,7 +1,5 @@
 (ns stedi.jsii.impl
   (:require [clojure.data.json :as json]
-            [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as sgen]
             [clojure.walk :as walk]
             [stedi.jsii.assembly :as assm]
             [stedi.jsii.client :as client]

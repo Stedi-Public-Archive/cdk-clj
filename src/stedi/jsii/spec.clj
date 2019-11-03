@@ -48,11 +48,11 @@
 
 (defmethod spec-form :collection
   [{:keys [collection]}]
-  (let [{:keys [elementtype kind]} collection]
-    (let [element-form (spec-form elementtype)]
-      (case kind
-        "map"   `(s/map-of ::string-like ~element-form)
-        "array" `(s/coll-of ~element-form :kind vector?)))))
+  (let [{:keys [elementtype kind]} collection
+        element-form               (spec-form elementtype)]
+    (case kind
+      "map"   `(s/map-of ::string-like ~element-form)
+      "array" `(s/coll-of ~element-form :kind vector?))))
 
 (defn- prop-spec-k
   [t prop]
@@ -113,12 +113,12 @@
                           (fn [{:keys [optional variadic] :as param}]
                             (let [form (spec-form (:type param))]
                               (cond optional `(s/nilable ~form)
-                                    variadic  `(s/* ~form)
-                                    :default form))))
+                                    variadic `(s/* ~form)
+                                    :else    form))))
                     parameters)))
 
 (defn- method-arg-spec-form
-  [{:keys [fqn] :as t} {:keys [static parameters] :as method}]
+  [{:keys [fqn]} {:keys [static parameters]}]
   (let [arities* (assm/arities
                    (concat (when-not static
                              (list {:name "this"
@@ -139,11 +139,6 @@
                 :args ~(method-arg-spec-form t method)
                 :ret  ~(or (some-> returns (:type) (spec-form)) `nil?)))
 
-(defn- prop-spec-definition
-  [t prop]
-  `(s/def ~(prop-spec-k t prop)
-     ~(spec-form (:type prop))))
-
 (defn- initializer-spec-definition
   [{:keys [fqn] :as t} method]
   `(s/fdef ~(fqn/fqn->qualified-symbol fqn "impl" "-initializer")
@@ -156,7 +151,12 @@
      :args ~(method-arg-spec-form t (assoc method :static true))
      :ret  ~(fqn/fqn->qualified-keyword fqn)))
 
-(defn- spec-definitions
+(defn- prop-spec-definition
+  [t prop]
+  `(s/def ~(prop-spec-k t prop)
+     ~(spec-form (:type prop))))
+
+(defn spec-definitions
   [t]
   (try
     (let [{:keys [initializer methods properties]} t

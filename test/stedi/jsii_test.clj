@@ -3,6 +3,10 @@
             [clojure.test :refer [deftest testing is]]
             [stedi.jsii :as jsii]))
 
+(jsii/import-fqn "@aws-cdk/core.App" 'App)
+(jsii/import-fqn "@aws-cdk/core.Stack" 'Stack)
+(jsii/import-fqn "@aws-cdk/core.TagType" 'TagType)
+
 (deftest jsii-class-test
   (let [C (jsii/get-class "@aws-cdk/core.Stack")]
     (is (instance? stedi.jsii.impl.JsiiClass C))
@@ -20,8 +24,6 @@
     (testing "objects extend ILookup for property access"
       (is (= "my-stack" (:stackName stack))))))
 
-(jsii/import-fqn "@aws-cdk/core.App" 'App)
-
 (deftest import-fqn-test
   (testing "refers a jsii primitive into the current namespace"
     (is (jsii/jsii-primitive? App)))
@@ -33,8 +35,6 @@
     (is (= (find-ns 'aws-cdk.core.App)
            (-> (ns-aliases (find-ns 'stedi.jsii-test))
                (get 'App))))))
-
-(jsii/import-fqn "@aws-cdk/core.Stack" 'Stack)
 
 (deftest importing-a-class-test
   (testing "refers a jsii class into the current namespace"
@@ -75,8 +75,6 @@
            (-> (resolve 'aws-cdk.core.Stack/addDependency)
                (meta)
                (:arglists))))))
-
-(jsii/import-fqn "@aws-cdk/core.TagType" 'TagType)
 
 (deftest importing-an-enum-test
   (testing "refers a jsii enum into the current namespace"
