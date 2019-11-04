@@ -118,11 +118,13 @@
                     parameters)))
 
 (defn- method-arg-spec-form
-  [{:keys [fqn]} {:keys [static parameters]}]
+  [{:keys [fqn]} {:keys [static parameters overrides]}]
   (let [arities* (assm/arities
                    (concat (when-not static
                              (list {:name "this"
-                                    :type {:fqn fqn}}))
+                                    :type (if overrides
+                                            {:fqn overrides}
+                                            {:fqn fqn})}))
                            parameters))]
     (if (= 1 (count arities*))
       (method-arity-form (first arities*))
