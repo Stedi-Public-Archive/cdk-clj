@@ -1,11 +1,10 @@
 (ns stedi.cdk
-  (:refer-clojure :exclude [require import])
+  (:refer-clojure :exclude [import])
   (:require [clojure.java.browse :as browse]
             [clojure.data.json :as json]
             [clojure.string :as string]
             [clojure.java.io :as io]
-            [stedi.cdk.import :as import]
-            [stedi.cdk.jsii.client :as client]))
+            [stedi.jsii :as jsii]))
 
 (def ^:private docs-prefix
   "https://docs.aws.amazon.com/cdk/api/latest/docs")
@@ -45,11 +44,8 @@
          (string? obj-class-or-fqn)
          (fqn->url obj-class-or-fqn)
 
-         (instance? stedi.cdk.impl.CDKClass obj-class-or-fqn)
-         (browse (.-fqn obj-class-or-fqn))
-
-         (instance? stedi.cdk.impl.CDKObject obj-class-or-fqn)
-         (browse (.getFqn (.-object-ref obj-class-or-fqn))))))))
+         (jsii/jsii-primitive? obj-class-or-fqn)
+         (browse (jsii/fqn obj-class-or-fqn)))))))
 
 (defmacro import
   "Imports jsii classes and binds them to an alias. Allows for multiple
@@ -63,7 +59,7 @@
                         class*             classes]
                     [(str module "." (name class*)) class*])]
     (doseq [[fqn alias*] fqn+alias]
-      (import/import-as-namespace fqn alias*))))
+      (jsii/import-fqn fqn alias*))))
 
 (defmacro defapp
   "The @aws-cdk/core.App class is the main class for a CDK project.
@@ -83,7 +79,7 @@
     [this]
     (stack this \"MyDevStack\" {}))"
   [name args & body]
-  (client/reset-runtime!)
+  (jsii/reset-runtime!)
   (when-not (.exists (io/file "cdk.json"))
     (spit "cdk.json"
           (json/write-str
