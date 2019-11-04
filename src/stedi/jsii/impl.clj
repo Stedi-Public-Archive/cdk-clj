@@ -181,18 +181,21 @@
 
 (defn class-instance?
   [fqn x]
-  (and (instance? JsiiObject x)
-       (some #{fqn} (base-classes x))))
+  (boolean
+    (and (instance? JsiiObject x)
+         (some #{fqn} (base-classes x)))))
 
 (defn enum-member?
   [fqn x]
-  (and (instance? JsiiEnumMember x)
-       (= fqn (.-fqn x))
-       ((member-values fqn) (.-value x))))
+  (boolean
+    (and (instance? JsiiEnumMember x)
+         (= fqn (.-fqn x))
+         ((member-values fqn) (.-value x)))))
 
 (defn satisfies-interface?
   [fqn x]
-  (and (instance? JsiiObject x)
-       (or (= (.-fqn x) fqn)
-           (let [{:keys [interfaces]} (get-type-info x)]
-             (some #{fqn} interfaces)))))
+  (boolean
+    (and (instance? JsiiObject x)
+         (or (= (.-fqn x) fqn)
+             (let [{:keys [interfaces]} (get-type-info x)]
+               (some #{fqn} interfaces))))))
