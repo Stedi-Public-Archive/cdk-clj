@@ -74,7 +74,10 @@
                  (merge-types (expand-type types base) t)
                  t)
 
-        interfaces (map #(get types %) (:interfaces t))]
+        interfaces (map (fn [interface-fqn]
+                          (let [interface-t (get types interface-fqn)]
+                            (expand-type types interface-t)))
+                        (:interfaces t))]
     (reduce #(merge-types %2 %1) merged interfaces)))
 
 (defn- indexed-types
