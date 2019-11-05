@@ -2,6 +2,7 @@
   (:refer-clojure :exclude [import])
   (:require [clojure.java.browse :as browse]
             [clojure.data.json :as json]
+            [clojure.spec.alpha :as s]
             [clojure.string :as string]
             [clojure.java.io :as io]
             [stedi.jsii :as jsii]))
@@ -46,6 +47,19 @@
          (jsii/jsii-primitive? obj-class-or-fqn)
          (browse (jsii/fqn obj-class-or-fqn)))))))
 
+(s/def ::import-args
+  (s/coll-of
+    (s/cat :module   string?
+           :bindings (s/+
+                       (s/alt :alias (s/cat :alias symbol?)
+                              :as    (s/cat :class symbol?
+                                            :as    #{:as}
+                                            :alias symbol?))))))
+
+(s/fdef import
+  :args ::import-args
+  :ret  any?)
+
 (defmacro import
   "Imports jsii classes and binds them to an alias. Allows for multiple
   module requirement bindings.
@@ -54,11 +68,10 @@
 
   (cdk/import [\"@aws-cdk/aws-lambda\" Function Runtime])"
   [& imports]
-  (let [fqn+alias (for [[module & classes] imports
-                        class*             classes]
-                    [(str module "." (name class*)) class*])]
-    (doseq [[fqn alias*] fqn+alias]
-      (jsii/import-fqn fqn alias*))))
+  (doseq [{:keys [module bindings]} (s/conform ::import-args imports)
+
+          [_ {:keys [class alias]}] bindings]
+    (jsii/import-fqn (str module "." (or class alias)) alias)))
 
 (defmacro defapp
   "The @aws-cdk/core.App class is the main class for a CDK project.

@@ -3,7 +3,9 @@
   (:require [clojure.test :refer [deftest is testing]]
             [stedi.cdk :as cdk]))
 
-(cdk/import ["@aws-cdk/core" Stack]
+(cdk/import ["@aws-cdk/core"
+             Stack
+             App :as A]
             ["@aws-cdk/aws-lambda" Runtime])
 
 (deftest cdk-example-test
@@ -16,4 +18,6 @@
   (testing "calling a static method"
     (is (Stack/isStack (Stack nil "my-stack"))))
   (testing "getting a static property of a class"
-    (is (:JAVA_8 Runtime))))
+    (is (:JAVA_8 Runtime)))
+  (testing "renaming an alias"
+    (is (A/isApp (A)))))
