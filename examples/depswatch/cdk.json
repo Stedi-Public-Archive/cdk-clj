@@ -1,0 +1,1 @@
+{"app":"clojure -A:dev -m stedi.cdk.main depswatch.cdk/app"}
