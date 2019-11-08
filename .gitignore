@@ -2,3 +2,5 @@
 .nrepl-port
 target
 /.clj-kondo
+**/cdk.out
+**/classes
