@@ -38,7 +38,7 @@
              StartExecution])
 
 (defn- clean
-  [path]
+  []
   (->> (io/file "classes")
        (file-seq)
        (reverse)
@@ -48,11 +48,12 @@
 (def code
   (let [jarpath "target/app.jar"
         deps    (edn/read-string (slurp "deps.edn"))]
-    (clean "classes")
-    (io/make-parents "classes/.")
-    (io/make-parents jarpath)
-    (compile 'depswatch.lambada)
-    (uberdeps/package deps jarpath {:aliases [:classes]})
+    (with-out-str
+      (clean)
+      (io/make-parents "classes/.")
+      (io/make-parents jarpath)
+      (compile 'depswatch.lambada)
+      (uberdeps/package deps jarpath {:aliases [:classes]}))
     (Code/fromAsset jarpath)))
 
 (defn LambadaFunction
