@@ -7,7 +7,7 @@
             [stedi.jsii :as jsii]))
 
 (def ^:private docs-prefix
-  "https://docs.aws.amazon.com/cdk/api/latest/docs")
+  "https://docs.aws.amazon.com/cdk/api/latest")
 
 (defn browse
   "Browse to CDK documentation by CDK fqn, CDK object or CDK
@@ -26,8 +26,7 @@
   (cdk/browse Stack)   ;; can open docs from a class
   (cdk/browse (Stack)) ;; can also open docs from an instance
   "
-  ([] (browse/browse-url
-        (str docs-prefix "/aws-construct-library.html")))
+  ([] (browse/browse-url docs-prefix))
   ([obj-class-or-fqn]
    (letfn [(cdk-class? [fqn]
              (re-find #"\.[A-Za-z]+$" fqn))
@@ -38,7 +37,7 @@
                      (string/replace fqn "/" "_")
                      (str (string/replace fqn "@aws-cdk/" "")
                           "-readme"))]
-               (format "%s/%s.html" docs-prefix url-formatted-fqn)))]
+               (format "%s/docs/%s.html" docs-prefix url-formatted-fqn)))]
      (browse/browse-url
        (cond
          (string? obj-class-or-fqn)
