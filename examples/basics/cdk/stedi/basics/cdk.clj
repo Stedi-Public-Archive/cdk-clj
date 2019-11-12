@@ -81,7 +81,8 @@ App/synth
 ;; and functions:
 
 (comment
-  (Bucket stack nil) ;; Fails with spec error
+  (Bucket stack nil)
+  ;; Fails with spec error
   )
 
 (def bucket (Bucket stack "bucket"))
@@ -111,6 +112,10 @@ App/synth
     (compile 'stedi.lambada)
     (uberdeps/package deps jarpath {:aliases [:classes]})))
 
+(comment
+  (cdk/browse Function)
+  )
+
 (def my-fn
   (Function stack
             "my-fn"
@@ -118,7 +123,13 @@ App/synth
              :handler     "stedi.cdk.basics.Hello"
              :runtime     (:JAVA_8 Runtime)               ;; Getting a static property
              :environment {"BUCKET" (:bucketName bucket)} ;; Getting an instance property
-             })) 
+             }))
+
+(comment
+  ;; See it bound to the construct tree
+  (map (comp :path :node)
+       (get-in stack [:node :children]))
+  )
 
 ;; We can grant the function write access to the bucket using an
 ;; instance method
