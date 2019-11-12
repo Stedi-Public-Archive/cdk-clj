@@ -17,6 +17,19 @@
                                     (list (symbol name)))))))
           (assm/arities parameters))))
 
+(defn- render-constructor-docstring
+  [{:keys [docs]}]
+  (let [{:keys [default stability summary deprecated remarks]} docs]
+    (->> [(str)
+          (when stability (format "stability: [%s]" stability))
+          (str)
+          (when summary summary)
+          (when deprecated deprecated)
+          (when default (format "default: %s" stability))
+          (when remarks (format "remarks: %s" remarks))]
+         (remove nil?)
+         (string/join "\n"))))
+
 (defn- intern-initializer
   [impl-ns-sym class-sym c]
   (let [fqs
@@ -24,31 +37,47 @@
           (intern impl-ns-sym '-initializer
                   (fn [& args]
                     (impl/create c args))))
-        parameters (-> (.-fqn c)
-                       (assm/get-type)
+        assembly   (assm/get-type (.-fqn c))
+        parameters (-> assembly
                        (:initializer)
                        (:parameters))]
     (spec/load-spec fqs)
     (stest/instrument fqs)
     (intern impl-ns-sym
             (with-meta class-sym
-              {:arglists (arg-lists parameters)})
+              {:arglists (arg-lists parameters)
+               :doc      (render-constructor-docstring assembly)})
             c)
     (spec/load-spec (symbol (name impl-ns-sym) (name class-sym)))))
+
+(defn- render-method-docstring
+  [{:keys [docs]}]
+  (let [{:keys [default stability summary deprecated]} docs]
+    (->> [(str)
+          (when stability (format "stability: [%s]" stability))
+          (str)
+          (when summary summary)
+          (when deprecated deprecated)
+          (when default (format "default: %s" stability))]
+         (remove nil?)
+         (string/join "\n"))))
 
 (defn- intern-methods
   [target-ns-sym methods c]
   (doseq [{:keys [static] :as method} methods]
     (let [method-sym (-> method (:name) (symbol))
           parameters (:parameters method)
+          deprecated (get-in method [:docs :deprecated])
           fqs
           (symbol
             (intern target-ns-sym
                     (with-meta method-sym
-                      {:arglists (arg-lists
-                                   (concat (when-not static
-                                             (list {:name "this"}))
-                                           parameters))})
+                      (cond-> {:arglists (arg-lists
+                                           (concat (when-not static
+                                                     (list {:name "this"}))
+                                                   parameters))
+                               :doc      (render-method-docstring method)}
+                        deprecated (assoc :deprecated true)))
                     (fn [& args]
                       (impl/-invoke
                         (if static c (first args))
