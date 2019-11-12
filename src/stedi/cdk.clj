@@ -47,14 +47,21 @@
          (jsii/jsii-primitive? obj-class-or-fqn)
          (browse (jsii/fqn obj-class-or-fqn)))))))
 
+(s/def ::bindings
+  (s/+
+    (s/alt :alias (s/cat :alias symbol?)
+           :as    (s/cat :class symbol?
+                         :as    #{:as}
+                         :alias symbol?))))
+
 (s/def ::import-args
-  (s/coll-of
-    (s/cat :module   string?
-           :bindings (s/+
-                       (s/alt :alias (s/cat :alias symbol?)
-                              :as    (s/cat :class symbol?
-                                            :as    #{:as}
-                                            :alias symbol?))))))
+  (s/or :v0 (s/coll-of
+              (s/cat :module string?
+                     :bindings ::bindings))
+        :v1 (s/coll-of
+              (s/cat :bindings (s/spec ::bindings)
+                     :from #{:from}
+                     :module string?))))
 
 (s/fdef import
   :args ::import-args
@@ -66,12 +73,20 @@
 
   Example:
 
-  (cdk/import [\"@aws-cdk/aws-lambda\" Function Runtime])"
+  (cdk/import [[App Stack] :from \"@aws-cdk/core\"])"
   [& imports]
-  (doseq [{:keys [module bindings]} (s/conform ::import-args imports)
+  (let [[version import-list] (s/conform ::import-args imports)]
+    (when (= :v0 version)
+      (println
+        (string/join
+          ""
+          ["Warning: Using outdated import format. Please use"
+           "the :from syntax. See `cdk/import` docstring for "
+           "example."])))
+    (doseq [{:keys [module bindings]} import-list
 
-          [_ {:keys [class alias]}] bindings]
-    (jsii/import-fqn (str module "." (or class alias)) alias)))
+            [_ {:keys [class alias]}] bindings]
+      (jsii/import-fqn (str module "." (or class alias)) alias))))
 
 (defmacro defapp
   "The @aws-cdk/core.App class is the main class for a CDK project.

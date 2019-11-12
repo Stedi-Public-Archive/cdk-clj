@@ -3,10 +3,8 @@
   (:require [clojure.test :refer [deftest is testing]]
             [stedi.cdk :as cdk]))
 
-(cdk/import ["@aws-cdk/core"
-             Stack
-             App :as A]
-            ["@aws-cdk/aws-lambda" Runtime])
+(cdk/import [[App :as A, Stack] :from "@aws-cdk/core"]
+            [[Runtime] :from "@aws-cdk/aws-lambda"])
 
 (deftest cdk-example-test
   (testing "instantiating an object"
