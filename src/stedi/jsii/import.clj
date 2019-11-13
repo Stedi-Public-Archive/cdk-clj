@@ -1,5 +1,6 @@
 (ns stedi.jsii.import
   (:require [clojure.spec.test.alpha :as stest]
+            [clojure.string :as string]
             [stedi.jsii.assembly :as assm]
             [stedi.jsii.fqn :as fqn]
             [stedi.jsii.impl :as impl]
@@ -17,7 +18,7 @@
           (assm/arities parameters))))
 
 (defn- intern-initializer
-  [impl-ns-sym alias-sym c]
+  [impl-ns-sym class-sym c]
   (let [fqs
         (symbol
           (intern impl-ns-sym '-initializer
@@ -30,10 +31,10 @@
     (spec/load-spec fqs)
     (stest/instrument fqs)
     (intern impl-ns-sym
-            (with-meta alias-sym
+            (with-meta class-sym
               {:arglists (arg-lists parameters)})
             c)
-    (spec/load-spec (symbol (name impl-ns-sym) (name alias-sym)))))
+    (spec/load-spec (symbol (name impl-ns-sym) (name class-sym)))))
 
 (defn- intern-methods
   [target-ns-sym methods c]
@@ -67,16 +68,19 @@
 (defn import-fqn
   [fqn alias-sym]
   (let [target-ns-sym (fqn/fqn->ns-sym fqn)
+        class-sym     (-> fqn (string/split #"\.") (last) (symbol))
         impl-ns-sym   (symbol (str target-ns-sym ".impl"))
         c             (impl/get-class fqn)
 
         {:keys [methods members]} (impl/get-type-info c)]
     (create-ns target-ns-sym)
     (create-ns impl-ns-sym)
-    (ns-unmap impl-ns-sym alias-sym)
-    (intern-initializer impl-ns-sym alias-sym c)
+    (ns-unmap impl-ns-sym class-sym)
+    (intern-initializer impl-ns-sym class-sym c)
     (intern-methods target-ns-sym methods c)
     (intern-enum-members target-ns-sym members c)
-    (ns-unmap *ns* alias-sym)
     (alias alias-sym target-ns-sym)
-    (refer impl-ns-sym :only [alias-sym])))
+    (ns-unmap *ns* alias-sym)
+    (refer impl-ns-sym
+           :only [class-sym]
+           :rename {class-sym alias-sym})))
