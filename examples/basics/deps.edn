@@ -1,0 +1,7 @@
+{:paths   ["src"]
+ :deps    {org.clojure/clojure {:mvn/version "1.10.1"}
+           uswitch/lambada     {:mvn/version "0.1.2"}}
+ :aliases {:classes {:extra-paths ["classes"]}
+           :dev     {:extra-paths ["cdk"]
+                     :extra-deps  {stedi/cdk-clj {:local/root "../../"}
+                                   uberdeps      {:mvn/version "0.1.6"}}}}}

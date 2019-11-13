@@ -1,0 +1,1 @@
+{"app":"clojure -A:dev -m stedi.cdk.main stedi.basics.cdk/app"}
