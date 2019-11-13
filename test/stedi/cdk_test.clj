@@ -4,7 +4,8 @@
             [stedi.cdk :as cdk]))
 
 (cdk/import [[App :as A, Stack] :from "@aws-cdk/core"]
-            [[Runtime] :from "@aws-cdk/aws-lambda"])
+            [[Function Runtime] :from "@aws-cdk/aws-lambda"]
+            [[StringParameter] :from "@aws-cdk/aws-ssm"])
 
 (deftest cdk-example-test
   (testing "instantiating an object"
@@ -18,4 +19,9 @@
   (testing "getting a static property of a class"
     (is (:JAVA_8 Runtime)))
   (testing "renaming an alias"
-    (is (A/isApp (A)))))
+    (is (A/isApp (A))))
+  (testing "calling a method on a returned interface"
+    (let [s (Stack)]
+      (is (StringParameter/grantRead
+            (StringParameter/fromStringParameterName s "param" "param-name")
+            (Function/fromFunctionArn s "fn" "function-arn"))))))

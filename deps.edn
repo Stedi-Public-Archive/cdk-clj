@@ -2,7 +2,7 @@
  :deps    {com.stuartsierra/dependency         {:mvn/version "0.2.0"}
            org.apache.commons/commons-compress {:mvn/version "1.19"}
            org.clojure/data.json               {:mvn/version "0.2.6"}
-           software.amazon.jsii/jsii-runtime   {:mvn/version "0.19.0"}
+           software.amazon.jsii/jsii-runtime   {:mvn/version "0.20.4"}
            software.amazon.awscdk/core         {:mvn/version "1.12.0.DEVPREVIEW"
                                                 :exclude     [software.amazon.jsii/jsii-runtime]}
            software.amazon.awscdk/lambda       {:mvn/version "1.12.0.DEVPREVIEW"

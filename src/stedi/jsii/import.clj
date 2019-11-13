@@ -101,7 +101,8 @@
         impl-ns-sym   (symbol (str target-ns-sym ".impl"))
         c             (impl/get-class fqn)
 
-        {:keys [methods members]} (impl/get-type-info c)]
+        {:keys [members]} (impl/get-type-info c)
+        methods           (assm/methods fqn)]
     (create-ns target-ns-sym)
     (create-ns impl-ns-sym)
     (ns-unmap impl-ns-sym class-sym)

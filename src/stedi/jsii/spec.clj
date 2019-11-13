@@ -60,7 +60,7 @@
 
 (defn gen-class-instance
   [fqn]
-  (sgen/return (impl/->JsiiObject fqn nil)))
+  (sgen/return (impl/->JsiiObject fqn [] nil)))
 
 (defn- class-spec-definition
   [{:keys [fqn]}]
@@ -85,7 +85,8 @@
 (defn gen-satisfies-interface
   [fqn]
   (sgen/return
-    (impl/->JsiiObject fqn nil)))
+    ;; TODO: fqn for object-id is no longer a correct assumption
+    (impl/->JsiiObject fqn [fqn] nil)))
 
 (defn- interface-spec-definition
   [{:keys [fqn]}]
@@ -161,7 +162,10 @@
 (defn spec-definitions
   [t]
   (try
-    (let [{:keys [initializer methods properties]} t
+    (let [{:keys [initializer]} t
+
+          methods    (some-> t (:fqn) (assm/methods))
+          properties (some-> t (:fqn) (assm/properties))
 
           type-definition
           (case (metatype t)

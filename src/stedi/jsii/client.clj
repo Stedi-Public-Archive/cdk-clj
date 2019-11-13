@@ -53,7 +53,8 @@
   ([fqn initializer-args]
    (load-module fqn)
    (-> (.createObject (client) fqn (map edn->json-node initializer-args))
-       (.getObjId))))
+       (.toJson)
+       (json-node->edn))))
 
 (defn delete-object
   [object-ref]

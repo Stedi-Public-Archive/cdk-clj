@@ -6,19 +6,30 @@
             [stedi.jsii.fqn :as fqn])
   (:import (software.amazon.jsii JsiiObjectRef)))
 
-(defn- jsii-type?
+(def ^:private valid-tokens
+  #{"$jsii.byref"
+    "$jsii.enum"
+    "$jsii.date"
+    "$jsii.map"})
+
+(defn- jsii-type
   [x]
   (and (map? x)
-       (string? (ffirst x))
-       (.startsWith (ffirst x) "$jsii")))
+       (some valid-tokens (keys x))))
 
-(defmulti ^:private ->type ffirst)
+;; This is to encompass conversions of different JSON-serialized jsii
+;; types. Only $jsii.byref is currently implemented because we have
+;; not seen examples of the other serializations yet. However, the
+;; link below implies that we may run into additional types that need
+;; to be implemented.
+;; https://github.com/aws/jsii/blob/master/packages/jsii-java-runtime/project/src/main/java/software/amazon/jsii/JsiiObjectMapper.java
+(defmulti ^:private ->type jsii-type)
 
 (defn- ->clj
   [m]
   (walk/postwalk
     (fn [x]
-      (if (jsii-type? x)
+      (if (jsii-type x)
         (->type x)
         x))
     m))
@@ -31,16 +42,17 @@
   (assm/get-type (.-fqn t)))
 
 (defn- props
-  [x]
+  [x pred?]
   (into #{}
-        (comp (map :name)
+        (comp (filter pred?)
+              (map :name)
               (map keyword))
-        (:properties (get-type-info x))))
+        (assm/properties (.-fqn x))))
 
-(deftype JsiiObject [fqn objId]
+(deftype JsiiObject [fqn interfaces objId]
   clojure.lang.ILookup
   (valAt [this k]
-    (let [valid-props (props this)
+    (let [valid-props (props this (complement :static))
           value
           (or (valid-props k)
               (throw (ex-info "Invalid property"
@@ -64,15 +76,17 @@
 
 (defmethod ->type "$jsii.byref"
   [x]
-  (let [id  (-> x first second)
-        ref (JsiiObjectRef/fromObjId id)]
-    (->JsiiObject (.getFqn ref) id)))
+  (let [id         (-> x first second)
+        interfaces (get x "$jsii.interfaces" [])
+        ref        (JsiiObjectRef/fromObjId id)]
+    (->JsiiObject (.getFqn ref) interfaces id)))
 
 (defmethod print-method JsiiObject
   [this w]
   (.write w (format "#jsii-object[%s]"
-                    (pr-str {:id    (.-objId this)
-                             :props (props this)}))))
+                    (pr-str {:id         (.-objId this)
+                             :interfaces (.-interfaces this)
+                             :props      (props this (complement :static))}))))
 
 (defn- call-initializer
   [this args]
@@ -83,7 +97,7 @@
 (deftype JsiiClass [fqn]
   clojure.lang.ILookup
   (valAt [this k]
-    (let [valid-props (props this)
+    (let [valid-props (props this :static)
           value
           (or (valid-props k)
               (throw (ex-info "Invalid property"
@@ -111,7 +125,7 @@
   [this w]
   (.write w (format "#jsii-class[%s]"
                     (pr-str {:fqn   (.-fqn this)
-                             :props (props this)}))))
+                             :props (props this :static)}))))
 
 (deftype JsiiEnumMember [fqn value]
   json/JSONWriter
@@ -143,24 +157,15 @@
                     (pr-str {:fqn     (.-fqn this)
                              :members (member-values (.-fqn this))}))))
 
-(declare get-class)
-
-(defn- base-classes
-  ([x] (base-classes x nil))
-  ([x classes]
-   (lazy-seq
-     (let [classes' (conj classes (.-fqn x))]
-       (if-let [base (:base (get-type-info x))]
-         (base-classes (get-class base) classes')
-         classes')))))
-
 ;;------------------------------------------------------------------------------
 
 (defn create
   [c args]
-  (let [fqn (.-fqn c)
-        id  (client/create-object fqn (or args []))]
-    (->JsiiObject fqn id)))
+  (let [fqn        (.-fqn c)
+        object     (client/create-object fqn (or args []))
+        interfaces (get object "$jsii.interfaces" [])
+        oid        (get object "$jsii.byref")]
+    (->JsiiObject fqn interfaces oid)))
 
 (defn get-class
   [fqn]
@@ -183,7 +188,7 @@
   [fqn x]
   (boolean
     (and (instance? JsiiObject x)
-         (some #{fqn} (base-classes x)))))
+         (some #{fqn} (assm/class-heirarchy (.-fqn x))))))
 
 (defn enum-member?
   [fqn x]
@@ -196,6 +201,7 @@
   [fqn x]
   (boolean
     (and (instance? JsiiObject x)
-         (or (= (.-fqn x) fqn)
-             (let [{:keys [interfaces]} (get-type-info x)]
-               (some #{fqn} interfaces))))))
+         (let [interfaces (.-interfaces x)]
+           (some #{fqn} (into #{}
+                              (mapcat assm/interfaces)
+                              (conj interfaces (.-fqn x))))))))
