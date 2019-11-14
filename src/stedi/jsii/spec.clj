@@ -65,7 +65,7 @@
 (defn- class-spec-definition
   [{:keys [fqn]}]
   `(s/def ~(fqn/fqn->qualified-keyword fqn)
-     (s/spec (partial impl/class-instance? ~fqn)
+     (s/spec #(impl/class-instance? ~fqn %)
              :gen (partial gen-class-instance ~fqn))))
 
 (defn gen-enum-member
@@ -79,7 +79,7 @@
 (defn- enum-spec-definition
   [{:keys [fqn]}]
   `(s/def ~(fqn/fqn->qualified-keyword fqn)
-     (s/spec (partial impl/enum-member? ~fqn)
+     (s/spec #(impl/enum-member? ~fqn %)
              :gen (partial gen-enum-member ~fqn))))
 
 (defn gen-satisfies-interface
@@ -90,7 +90,7 @@
 (defn- interface-spec-definition
   [{:keys [fqn]}]
   `(s/def ~(fqn/fqn->qualified-keyword fqn)
-     (s/spec (partial impl/satisfies-interface? ~fqn)
+     (s/spec #(impl/satisfies-interface? ~fqn %)
              :gen (partial gen-satisfies-interface ~fqn))))
 
 (defn- datatype-spec-definition
