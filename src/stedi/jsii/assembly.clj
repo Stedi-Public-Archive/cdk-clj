@@ -3,7 +3,8 @@
             [clojure.java.io :as io]
             [clojure.string :as string])
   (:import (java.util.zip GZIPInputStream)
-           (org.apache.commons.compress.archivers.tar TarArchiveInputStream)))
+           (org.apache.commons.compress.archivers.tar TarArchiveInputStream))
+  (:refer-clojure :exclude [methods]))
 
 (defn- classpath-jsii-archives
   []
@@ -47,50 +48,13 @@
         (map load-assembly-resource)
         (classpath-jsii-archives)))
 
-(defn- merge-named-colls
-  [coll1 coll2]
-  (mapv second
-        (merge (into {} (map (juxt :name identity)) coll1)
-               (into {} (map (juxt :name identity)) coll2))))
-
-(defn- merge-types
-  [t1 t2]
-  (let [props      (merge-named-colls (:properties t1)
-                                      (:properties t2))
-        interfaces (-> (concat (:interfaces t1)
-                               (:interfaces t2))
-                       (distinct)
-                       (vec))
-        methods    (merge-named-colls (:methods t1)
-                                      (:methods t2))]
-    (-> (merge t1 t2)
-        (assoc :methods methods)
-        (assoc :properties props)
-        (assoc :interfaces interfaces))))
-
-(defn- expand-type
-  [types t]
-  (let [merged (if-let [base (some->> t (:base) (get types))]
-                 (merge-types (expand-type types base) t)
-                 t)
-
-        interfaces (map (fn [interface-fqn]
-                          (let [interface-t (get types interface-fqn)]
-                            (expand-type types interface-t)))
-                        (:interfaces t))]
-    (reduce #(merge-types %2 %1) merged interfaces)))
-
 (defn- indexed-types
   []
   (->> (load-all-assemblies)
        (map :types)
        (apply merge)))
 
-(defonce all-types*
-  (let [types (indexed-types)]
-    (sequence (comp (map second)
-                    (map (partial expand-type types)))
-              types)))
+(defonce ^:private all-types* (map second (indexed-types)))
 
 (defn all-types [] all-types*)
 
@@ -116,3 +80,51 @@
       (list base)
       (for [n (map inc (range (count optional)))]
         (concat base (take n optional))))))
+
+(defn- interfaces*
+  [fqn]
+  (let [t            (get-type fqn)
+        t-interfaces (:interfaces t)]
+    (lazy-cat (when (= "interface" (:kind t))
+                (list fqn))
+              t-interfaces
+              (mapcat interfaces* t-interfaces)
+              (when-let [base (:base t)]
+                (interfaces* base)))))
+
+(defn interfaces
+  [fqn]
+  (set (interfaces* fqn)))
+
+(defn class-heirarchy
+  [fqn]
+  (when-let [t (get-type fqn)]
+    (lazy-seq (cons fqn (class-heirarchy (:base t))))))
+
+(defn- dedupe-by-name
+  [coll]
+  (sequence (comp (map second)
+                  (map last))
+            (group-by :name coll)))
+
+(defn- properties*
+  [fqn]
+  (when-let [t (get-type fqn)]
+    (lazy-cat (when-let [base (:base t)]
+                (properties* base))
+              (:properties t))))
+
+(defn properties
+  [fqn]
+  (dedupe-by-name (remove :protected (properties* fqn))))
+
+(defn- methods*
+  [fqn]
+  (when-let [t (get-type fqn)]
+    (lazy-cat (when-let [base (:base t)]
+                (methods* base))
+              (:methods t))))
+
+(defn methods
+  [fqn]
+  (dedupe-by-name (remove :protected (methods* fqn))))
