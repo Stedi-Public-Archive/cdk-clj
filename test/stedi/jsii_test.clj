@@ -51,9 +51,6 @@
       (is (= '#{aws-cdk.core.App/synth
                 aws-cdk.core.App/isApp
                 aws-cdk.core.App/isConstruct
-                aws-cdk.core.App/synthesize
-                aws-cdk.core.App/validate
-                aws-cdk.core.App/prepare
                 aws-cdk.core.App/toString}
              interned-symbols))))
 
