@@ -1,7 +1,7 @@
 (ns stedi.cdk.main
   (:require [stedi.cdk :as cdk]))
 
-(cdk/import ["@aws-cdk/core" App])
+(cdk/import [[App] :from "@aws-cdk/core"])
 
 (defn -main [& [app-sym]]
   (let [app @(requiring-resolve (symbol app-sym))]
