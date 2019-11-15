@@ -28,7 +28,7 @@
 ;; tree. `cdk-clj` exposes access to these constructs through the
 ;; `cdk/import` macro.
 
-(cdk/import ["@aws-cdk/core" App])
+(cdk/import [[App] :from "@aws-cdk/core"])
 
 ;; Import does two things:
 ;; 1. makes App resolvable to a jsii-class in the local namespace
@@ -60,7 +60,7 @@ App/synth
 ;; Applications are composed of one or more Stacks, each representing
 ;; a CloudFormation Stack. A Stack is a Construct as well.
 
-(cdk/import ["@aws-cdk/core" Stack])
+(cdk/import [[Stack] :from "@aws-cdk/core"])
 
 ;; Child constructs are connected to their parent by passing in the
 ;; parent as the scope of the child's constructor function.
@@ -90,7 +90,7 @@ App/synth
 ;; Buckets aren't particularly interesting, and lambdas + serverless
 ;; are all the rage so lets add a lambda function as well.
 
-(cdk/import ["@aws-cdk/aws-lambda" Code Function Runtime])
+(cdk/import [[Code Function Runtime] :from "@aws-cdk/aws-lambda"])
 
 (defn- clean
   []
