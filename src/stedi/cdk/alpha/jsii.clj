@@ -1,8 +1,8 @@
-(ns stedi.jsii
+(ns stedi.cdk.alpha.jsii
   "A Clojure-based interface into jsii modules."
-  (:require [stedi.jsii.client :as client]
-            [stedi.jsii.impl :as impl]
-            [stedi.jsii.import :as import]))
+  (:require [stedi.cdk.alpha.jsii.client :as client]
+            [stedi.cdk.alpha.jsii.impl :as impl]
+            [stedi.cdk.alpha.jsii.import :as import]))
 
 (defn get-class
   "Gets the jsii class for a given fqn."
@@ -14,10 +14,10 @@
   [x]
   (boolean
     (some #(instance? % x)
-          [stedi.jsii.impl.JsiiObject
-           stedi.jsii.impl.JsiiClass
-           stedi.jsii.impl.JsiiEnumClass
-           stedi.jsii.impl.JsiiEnumMember])))
+          [stedi.cdk.alpha.jsii.impl.JsiiObject
+           stedi.cdk.alpha.jsii.impl.JsiiClass
+           stedi.cdk.alpha.jsii.impl.JsiiEnumClass
+           stedi.cdk.alpha.jsii.impl.JsiiEnumMember])))
 
 (defn fqn
   "Returns the fqn of a jsii primitive."

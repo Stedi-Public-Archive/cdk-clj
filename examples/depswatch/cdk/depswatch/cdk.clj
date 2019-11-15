@@ -1,7 +1,7 @@
 (ns depswatch.cdk
   (:require [clojure.edn :as edn]
             [clojure.java.io :as io]
-            [stedi.cdk :as cdk]
+            [stedi.cdk.alpha :as cdk]
             [uberdeps.api :as uberdeps]))
 
 (cdk/import [[App Construct Duration Stack] :from "@aws-cdk/core"]

@@ -1,5 +1,5 @@
 (ns stedi.cdk.main
-  (:require [stedi.cdk :as cdk]))
+  (:require [stedi.cdk.alpha :as cdk]))
 
 (cdk/import [[App] :from "@aws-cdk/core"])
 

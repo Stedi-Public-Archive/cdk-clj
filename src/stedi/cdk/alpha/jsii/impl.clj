@@ -1,9 +1,9 @@
-(ns stedi.jsii.impl
+(ns stedi.cdk.alpha.jsii.impl
   (:require [clojure.data.json :as json]
             [clojure.walk :as walk]
-            [stedi.jsii.assembly :as assm]
-            [stedi.jsii.client :as client]
-            [stedi.jsii.fqn :as fqn])
+            [stedi.cdk.alpha.jsii.assembly :as assm]
+            [stedi.cdk.alpha.jsii.client :as client]
+            [stedi.cdk.alpha.jsii.fqn :as fqn])
   (:import (software.amazon.jsii JsiiObjectRef)))
 
 (def ^:private valid-tokens

@@ -1,11 +1,11 @@
-(ns stedi.cdk
+(ns stedi.cdk.alpha
   (:refer-clojure :exclude [import])
-  (:require [clojure.java.browse :as browse]
-            [clojure.data.json :as json]
+  (:require [clojure.data.json :as json]
+            [clojure.java.browse :as browse]
+            [clojure.java.io :as io]
             [clojure.spec.alpha :as s]
             [clojure.string :as string]
-            [clojure.java.io :as io]
-            [stedi.jsii :as jsii]))
+            [stedi.cdk.alpha.jsii :as jsii]))
 
 (def ^:private docs-prefix
   "https://docs.aws.amazon.com/cdk/api/latest")
