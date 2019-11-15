@@ -78,11 +78,9 @@
   (let [[version import-list] (s/conform ::import-args imports)]
     (when (= :v0 version)
       (println
-        (string/join
-          ""
-          ["Warning: Using outdated import format. Please use"
-           "the :from syntax. See `cdk/import` docstring for "
-           "example."])))
+       (str "Warning: Using outdated import format. Please use "
+            "the :from syntax. See `cdk/import` docstring for "
+            "example.")))
     (doseq [{:keys [module bindings]} import-list
 
             [_ {:keys [class alias]}] bindings]
