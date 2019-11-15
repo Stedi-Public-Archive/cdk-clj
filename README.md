@@ -69,8 +69,8 @@ npm install -g aws-cdk
   (:require [stedi.cdk :as cdk]
             [stedi.my-app :as my-app]))
 
-(cdk/import ["@aws-cdk/core" Stack]
-            ["@aws-cdk/aws-s3" Bucket)
+(cdk/import [[Stack] :from "@aws-cdk/core"]
+            [[Bucket] :from "@aws-cdk/aws-s3")
 
 (defn AppStack
   [scope id props]
@@ -138,7 +138,7 @@ interfaces:
 
 ``` clojure
 ;; Creates a bucket based on the CDK class @aws-cdk/aws-s3.Bucket
-(cdk/import ["@aws-cdk/aws-s3" Bucket])
+(cdk/import [[Bucket] :from "@aws-cdk/aws-s3"])
 (def bucket (Bucket parent "my-bucket" {}))
 ```
 
@@ -156,13 +156,13 @@ interfaces:
 **Call a method on an object**
 ``` clojure
 ;; Grants READ permission to the lambda-function object
-(cdk/import ["@aws-cdk/aws-s3" Bucket])
+(cdk/import [[Bucket] :from "@aws-cdk/aws-s3"])
 (Bucket/grantRead bucket lambda-function)
 ```
 
 **Get static property of a class**
 ``` clojure
-(cdk/import ["@aws-cdk/aws-lambda" Runtime])
+(cdk/import [[Runtime] :from "@aws-cdk/aws-lambda"])
 ;; Get the JAVA8 runtime instance
 (:JAVA_8 Runtime)
 ```
@@ -174,7 +174,7 @@ interfaces:
 
 **Call static method on class**
 ``` clojure
-(cdk/import ["@aws-cdk/aws-lambda" Code])
+(cdk/import [[Code] :from "@aws-cdk/aws-lambda"])
 ;; Refer to the src directory as an asset to be uploaded
 (Code/asset "src")
 ```

@@ -4,9 +4,9 @@
             [stedi.cdk :as cdk]
             [stedi.lambda.build :as lambda-build]))
 
-(cdk/import ["@aws-cdk/core" App Duration Stack]
-            ["@aws-cdk/aws-apigateway" LambdaRestApi]
-            ["@aws-cdk/aws-lambda" Code Function Runtime Tracing])
+(cdk/import [[App Duration Stack] :from "@aws-cdk/core"]
+            [[LambdaRestApi] :from "@aws-cdk/aws-apigateway"]
+            [[Code Function Runtime Tracing] :from "@aws-cdk/aws-lambda"])
 
 (def app (App {}))
 
