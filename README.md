@@ -213,7 +213,7 @@ See [LICENSE](LICENSE) for more information.
 [1]: https://github.com/aws/aws-cdk#aws-cloud-development-kit-aws-cdk
 [2]: https://github.com/aws/jsii
 [3]: https://docs.aws.amazon.com/cdk/api/latest/
-[4]: https://github.com/StediInc/cdk-clj/tree/master/example-app
+[4]: https://github.com/StediInc/cdk-clj/tree/master/examples/sampleapp
 [5]: https://docs.aws.amazon.com/cdk/api/latest/docs/aws-construct-library.html
 
 [apache-2]: https://www.apache.org/licenses/LICENSE-2.0
