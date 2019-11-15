@@ -1,9 +1,9 @@
-(ns stedi.jsii.spec
+(ns stedi.cdk.alpha.jsii.spec
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as sgen]
-            [stedi.jsii.assembly :as assm]
-            [stedi.jsii.impl :as impl]
-            [stedi.jsii.fqn :as fqn]))
+            [stedi.cdk.alpha.jsii.assembly :as assm]
+            [stedi.cdk.alpha.jsii.fqn :as fqn]
+            [stedi.cdk.alpha.jsii.impl :as impl]))
 
 (s/def ::string-like
   (s/or :string string?

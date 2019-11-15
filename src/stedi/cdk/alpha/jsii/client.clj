@@ -1,7 +1,7 @@
-(ns stedi.jsii.client
+(ns stedi.cdk.alpha.jsii.client
   (:require [clojure.data.json :as json]
             [clojure.string :as string]
-            [stedi.jsii.assembly :as assm])
+            [stedi.cdk.alpha.jsii.assembly :as assm])
   (:import (com.fasterxml.jackson.databind ObjectMapper)
            (software.amazon.jsii JsiiRuntime JsiiModule JsiiObjectRef)))
 

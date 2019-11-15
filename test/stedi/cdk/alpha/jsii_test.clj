@@ -1,7 +1,7 @@
-(ns stedi.jsii-test
+(ns stedi.cdk.alpha.jsii-test
   (:require [clojure.spec.alpha :as s]
-            [clojure.test :refer [deftest testing is]]
-            [stedi.jsii :as jsii]))
+            [clojure.test :as t :refer [deftest testing is]]
+            [stedi.cdk.alpha.jsii :as jsii]))
 
 (jsii/import-fqn "@aws-cdk/core.App" 'App)
 (jsii/import-fqn "@aws-cdk/core.Stack" 'Stack)
@@ -9,11 +9,11 @@
 
 (deftest jsii-class-test
   (let [C (jsii/get-class "@aws-cdk/core.Stack")]
-    (is (instance? stedi.jsii.impl.JsiiClass C))
+    (is (instance? stedi.cdk.alpha.jsii.impl.JsiiClass C))
 
     (testing "invoking a class invokes the constructor"
       (let [stack (C)]
-        (is (instance? stedi.jsii.impl.JsiiObject stack))))
+        (is (instance? stedi.cdk.alpha.jsii.impl.JsiiObject stack))))
 
     (testing "classes extend ILookup for static property access"
       (is (:ACCOUNT_ID (jsii/get-class "@aws-cdk/core.Aws"))))))
@@ -33,12 +33,12 @@
 
   (testing "aliases created namespace to the specified symbol"
     (is (= (find-ns 'aws-cdk.core.App)
-           (-> (ns-aliases (find-ns 'stedi.jsii-test))
+           (-> (ns-aliases (find-ns 'stedi.cdk.alpha.jsii-test))
                (get 'App))))))
 
 (deftest importing-a-class-test
   (testing "refers a jsii class into the current namespace"
-    (is (instance? stedi.jsii.impl.JsiiClass App)))
+    (is (instance? stedi.cdk.alpha.jsii.impl.JsiiClass App)))
 
   (testing "interns class functions into created namespace"
     (let [interned-symbols
@@ -75,7 +75,7 @@
 
 (deftest importing-an-enum-test
   (testing "refers a jsii enum into the current namespace"
-    (is (instance? stedi.jsii.impl.JsiiEnumClass TagType)))
+    (is (instance? stedi.cdk.alpha.jsii.impl.JsiiEnumClass TagType)))
 
   (testing "interns enum members into created namespace"
     (let [interned-symbols
@@ -93,4 +93,9 @@
              interned-symbols))))
 
   (testing "interned members are enum members"
-    (is (instance? stedi.jsii.impl.JsiiEnumMember TagType/STANDARD))))
+    (is (instance? stedi.cdk.alpha.jsii.impl.JsiiEnumMember TagType/STANDARD))))
+
+(comment
+  (t/run-tests)
+
+ )

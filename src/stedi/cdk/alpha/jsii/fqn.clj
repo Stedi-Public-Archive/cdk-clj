@@ -1,4 +1,4 @@
-(ns stedi.jsii.fqn
+(ns stedi.cdk.alpha.jsii.fqn
   (:require [clojure.string :as string]))
 
 (defn- tokenize

@@ -1,4 +1,4 @@
-(ns stedi.jsii.assembly
+(ns stedi.cdk.alpha.jsii.assembly
   (:require [clojure.data.json :as json]
             [clojure.java.io :as io]
             [clojure.string :as string])

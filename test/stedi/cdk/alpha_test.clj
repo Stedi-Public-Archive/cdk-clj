@@ -1,7 +1,7 @@
-(ns stedi.cdk-test
+(ns stedi.cdk.alpha-test
   "Provides examples of interacting with CDK constructs and classes."
   (:require [clojure.test :refer [deftest is testing]]
-            [stedi.cdk :as cdk]))
+            [stedi.cdk.alpha :as cdk]))
 
 (cdk/import [[App :as A, Stack] :from "@aws-cdk/core"]
             [[Function Runtime] :from "@aws-cdk/aws-lambda"]
