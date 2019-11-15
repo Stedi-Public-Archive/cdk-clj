@@ -1,7 +1,7 @@
 (ns stedi.cdk.app.sample
   (:require [clojure.java.io :as io]
             [stedi.app.sample :as sample-app]
-            [stedi.cdk :as cdk]
+            [stedi.cdk.alpha :as cdk]
             [stedi.lambda.build :as lambda-build]))
 
 (cdk/import [[App Duration Stack] :from "@aws-cdk/core"]
