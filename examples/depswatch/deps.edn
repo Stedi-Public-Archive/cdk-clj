@@ -6,7 +6,7 @@
  :aliases {:classes {:extra-paths ["classes"]}
            :dev     {:extra-paths ["cdk"]
                      :extra-deps  {stediinc/cdk-clj {:git/url "https://github.com/stediinc/cdk-clj.git"
-                                                     :sha     "fc982c9412b848ca78be37b8eaaf80ff455ada54"}
+                                                     :sha     "ab46b637862314d5bcabd81d29c767fbd8341eee"}
 
                                    uberdeps {:mvn/version "0.1.6"}
 

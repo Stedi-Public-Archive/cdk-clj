@@ -4,38 +4,15 @@
             [stedi.cdk :as cdk]
             [uberdeps.api :as uberdeps]))
 
-(cdk/import ["@aws-cdk/core"
-             App
-             Construct
-             Duration
-             Stack]
-            ["@aws-cdk/aws-apigateway"
-             LambdaRestApi]
-            ["@aws-cdk/aws-dynamodb"
-             AttributeType
-             Table]
-            ["@aws-cdk/aws-events"
-             Rule
-             Schedule]
-            ["@aws-cdk/aws-events-targets"
-             SfnStateMachine]
-            ["@aws-cdk/aws-lambda"
-             Code
-             Function
-             Runtime
-             Tracing]
-            ["@aws-cdk/aws-stepfunctions"
-             Chain
-             Choice
-             Condition
-             Data
-             Map
-             StateMachine
-             Succeed
-             Task]
-            ["@aws-cdk/aws-stepfunctions-tasks"
-             InvokeFunction
-             StartExecution])
+(cdk/import [[App Construct Duration Stack] :from "@aws-cdk/core"]
+            [[LambdaRestApi] :from "@aws-cdk/aws-apigateway"]
+            [[AttributeType Table] :from "@aws-cdk/aws-dynamodb"]
+            [[Rule Schedule] :from "@aws-cdk/aws-events"]
+            [[SfnStateMachine] :from "@aws-cdk/aws-events-targets"]
+            [[Code Function Runtime Tracing] :from "@aws-cdk/aws-lambda"]
+            [[Chain Choice Condition Data
+              Map StateMachine Succeed Task] :from "@aws-cdk/aws-stepfunctions"]
+            [[InvokeFunction StartExecution] :from "@aws-cdk/aws-stepfunctions-tasks"])
 
 (defn- clean
   []
