@@ -1,0 +1,27 @@
+{
+  "name": "cdk-clj",
+  "version": "1.0.0",
+  "description": "This library is a Clojure wrapper for [AWS Cloud Development Kit (AWS CDK)][1].",
+  "main": "index.js",
+  "directories": {
+    "example": "examples",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stediinc/cdk-clj.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/stediinc/cdk-clj/issues"
+  },
+  "homepage": "https://github.com/stediinc/cdk-clj#readme",
+  "devDependencies": {
+    "aws-cdk": "^1.16.3"
+  }
+}

@@ -4,3 +4,4 @@ target
 /.clj-kondo
 **/cdk.out
 **/classes
+**/node_modules
