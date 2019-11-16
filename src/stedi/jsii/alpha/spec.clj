@@ -1,9 +1,9 @@
-(ns stedi.cdk.alpha.jsii.spec
+(ns stedi.jsii.alpha.spec
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as sgen]
-            [stedi.cdk.alpha.jsii.assembly :as assm]
-            [stedi.cdk.alpha.jsii.fqn :as fqn]
-            [stedi.cdk.alpha.jsii.impl :as impl]))
+            [stedi.jsii.alpha.assembly :as assm]
+            [stedi.jsii.alpha.fqn :as fqn]
+            [stedi.jsii.alpha.impl :as impl]))
 
 (s/def ::string-like
   (s/or :string string?
@@ -95,15 +95,16 @@
              :gen (partial gen-satisfies-interface ~fqn))))
 
 (defn- datatype-spec-definition
-  [{:keys [fqn properties] :as t}]
-  (let [req-un (into []
-                     (comp (remove :optional)
-                           (map (partial prop-spec-k t)))
-                     properties)
-        opt-un (into []
-                     (comp (filter :optional)
-                           (map (partial prop-spec-k t)))
-                     properties)]
+  [{:keys [fqn] :as t}]
+  (let [properties (assm/properties fqn)
+        req-un     (into []
+                         (comp (remove :optional)
+                               (map (partial prop-spec-k t)))
+                         properties)
+        opt-un     (into []
+                         (comp (filter :optional)
+                               (map (partial prop-spec-k t)))
+                         properties)]
     `(s/def ~(fqn/fqn->qualified-keyword fqn)
        (s/keys :req-un ~req-un
                :opt-un ~opt-un))))

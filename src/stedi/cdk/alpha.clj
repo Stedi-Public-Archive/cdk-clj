@@ -5,7 +5,7 @@
             [clojure.java.io :as io]
             [clojure.spec.alpha :as s]
             [clojure.string :as string]
-            [stedi.cdk.alpha.jsii :as jsii]))
+            [stedi.jsii.alpha :as jsii]))
 
 (def ^:private docs-prefix
   "https://docs.aws.amazon.com/cdk/api/latest")

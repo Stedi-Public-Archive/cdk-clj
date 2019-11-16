@@ -1,10 +1,10 @@
-(ns stedi.cdk.alpha.jsii.import
+(ns stedi.jsii.alpha.import
   (:require [clojure.spec.test.alpha :as stest]
             [clojure.string :as string]
-            [stedi.cdk.alpha.jsii.assembly :as assm]
-            [stedi.cdk.alpha.jsii.fqn :as fqn]
-            [stedi.cdk.alpha.jsii.impl :as impl]
-            [stedi.cdk.alpha.jsii.spec :as spec]))
+            [stedi.jsii.alpha.assembly :as assm]
+            [stedi.jsii.alpha.fqn :as fqn]
+            [stedi.jsii.alpha.impl :as impl]
+            [stedi.jsii.alpha.spec :as spec]))
 
 (defn- arg-lists
   [parameters]

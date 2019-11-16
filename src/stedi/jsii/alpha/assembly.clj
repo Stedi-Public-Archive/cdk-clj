@@ -1,4 +1,4 @@
-(ns stedi.cdk.alpha.jsii.assembly
+(ns stedi.jsii.alpha.assembly
   (:require [clojure.data.json :as json]
             [clojure.java.io :as io]
             [clojure.string :as string])
@@ -110,7 +110,9 @@
 (defn- properties*
   [fqn]
   (when-let [t (get-type fqn)]
-    (lazy-cat (when-let [base (:base t)]
+    (lazy-cat (when-let [interfaces (:interfaces t)]
+                (mapcat properties* interfaces))
+              (when-let [base (:base t)]
                 (properties* base))
               (:properties t))))
 
