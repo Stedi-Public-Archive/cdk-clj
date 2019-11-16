@@ -5,15 +5,14 @@
          uswitch/lambada       {:mvn/version "0.1.2"}}
  :aliases {:classes {:extra-paths ["classes"]}
            :dev     {:extra-paths ["cdk"]
-                     :extra-deps  {stediinc/cdk-clj {:git/url "https://github.com/stediinc/cdk-clj.git"
-                                                     :sha     "ab46b637862314d5bcabd81d29c767fbd8341eee"}
+                     :extra-deps  {stediinc/cdk-clj {:local/root "../../"}
 
                                    uberdeps {:mvn/version "0.1.6"}
 
-                                   software.amazon.awscdk/apigateway          {:mvn/version "1.15.0.DEVPREVIEW"}
-                                   software.amazon.awscdk/dynamodb            {:mvn/version "1.15.0.DEVPREVIEW"}
-                                   software.amazon.awscdk/events              {:mvn/version "1.15.0.DEVPREVIEW"}
-                                   software.amazon.awscdk/events-targets      {:mvn/version "1.15.0.DEVPREVIEW"}
-                                   software.amazon.awscdk/lambda              {:mvn/version "1.15.0.DEVPREVIEW"}
-                                   software.amazon.awscdk/stepfunctions       {:mvn/version "1.15.0.DEVPREVIEW"}
-                                   software.amazon.awscdk/stepfunctions-tasks {:mvn/version "1.15.0.DEVPREVIEW"}}}}}
+                                   software.amazon.awscdk/apigateway          {:mvn/version "1.16.3.DEVPREVIEW"}
+                                   software.amazon.awscdk/dynamodb            {:mvn/version "1.16.3.DEVPREVIEW"}
+                                   software.amazon.awscdk/events              {:mvn/version "1.16.3.DEVPREVIEW"}
+                                   software.amazon.awscdk/events-targets      {:mvn/version "1.16.3.DEVPREVIEW"}
+                                   software.amazon.awscdk/lambda              {:mvn/version "1.16.3.DEVPREVIEW"}
+                                   software.amazon.awscdk/stepfunctions       {:mvn/version "1.16.3.DEVPREVIEW"}
+                                   software.amazon.awscdk/stepfunctions-tasks {:mvn/version "1.16.3.DEVPREVIEW"}}}}}
