@@ -16,11 +16,13 @@
 
 (defn- clean
   []
-  (->> (io/file "classes")
-       (file-seq)
-       (reverse)
-       (map io/delete-file)
-       (dorun)))
+  (let [f (io/file "classes")]
+    (when (.exists f)
+      (->> f
+           (file-seq)
+           (reverse)
+           (map io/delete-file)
+           (dorun)))))
 
 (def code
   (let [jarpath "target/app.jar"
