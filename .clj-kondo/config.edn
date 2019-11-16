@@ -1,10 +1,3 @@
 {:lint-as {stedi.lambda/defentrypoint clojure.core/def}
  :linters
- {:unresolved-symbol
-  {:exclude [(stedi.cdk/import [App Code Duration Function
-                                LambdaRestApi Runtime Stack Tracing])
-             (stedi.cdk.app.sample/App)
-             (stedi.cdk.app.sample/LambdaRestApi)
-             (stedi.cdk.app.sample/Stack)
-             (stedi.cdk.lambda/Function)
-             (stedi.cdk-test/Stack)]}}}
+ {:unresolved-symbol {:level :off}}}
