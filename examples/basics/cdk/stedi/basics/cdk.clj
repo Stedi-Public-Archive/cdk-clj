@@ -81,8 +81,11 @@ App/synth
 ;; and functions:
 
 (comment
-  (Bucket stack nil)
-  ;; Fails with spec error
+  (Bucket stack nil) ; Fails with spec error
+
+  ;; Worth noting that the CDK specs are closed
+
+  (Bucket stack "id" {:does-not-exist :foo}) ; Fails due to specs being closed
   )
 
 (def bucket (Bucket stack "bucket"))
