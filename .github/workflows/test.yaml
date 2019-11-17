@@ -1,17 +1,43 @@
 on: [pull_request]
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      - name: Install Clojure
-        run: |
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/deps.edn') }}
+      - run: |
           curl -O https://download.clojure.org/install/linux-install-1.10.1.469.sh
           chmod +x linux-install-1.10.1.469.sh
           sudo ./linux-install-1.10.1.469.sh
       - name: Lint
         run: |
           clojure -A:dev:lint
-      - name: Run tests
-        run: |
-          clojure -A:dev:test
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/deps.edn') }}
+      - uses: actions/cache@v1
+        with:
+          path: ~/.gitlibs
+          key: ${{ runner.os }}-gitlibs-${{ hashFiles('**/deps.edn') }}
+      - uses: actions/cache@v1
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '10.x'
+      - run: npm install
+      - run: |
+          curl -O https://download.clojure.org/install/linux-install-1.10.1.469.sh
+          chmod +x linux-install-1.10.1.469.sh
+          sudo ./linux-install-1.10.1.469.sh
+      - run: clojure -A:dev -Spath
+      - run: clojure -A:dev:test
