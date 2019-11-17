@@ -1,8 +1,6 @@
 (ns stedi.cdk.alpha
   (:refer-clojure :exclude [import])
-  (:require [clojure.data.json :as json]
-            [clojure.java.browse :as browse]
-            [clojure.java.io :as io]
+  (:require [clojure.java.browse :as browse]
             [clojure.spec.alpha :as s]
             [clojure.string :as string]
             [stedi.jsii.alpha :as jsii]))
@@ -96,8 +94,6 @@
   After declaring itself, the app extension instantiates itself which
   forces cdk validations to occur to streamline the repl-workflow.
 
-  Autogenerates a `cdk.json` file if it does not exist.
-
   Example:
 
   (cdk/defapp app
@@ -105,15 +101,9 @@
     (stack this \"MyDevStack\" {}))"
   [name args & body]
   (jsii/reset-runtime!)
-  (when-not (.exists (io/file "cdk.json"))
-    (spit "cdk.json"
-          (json/write-str
-            {:app (format "clojure -A:dev -m stedi.cdk.main %s"
-                          (str *ns* "/" name))}
-            :escape-slash false)))
   `(do (import [[~'App] :from "@aws-cdk/core"])
        (let [app# (~'App {})]
-       ((fn ~args ~@body) app#)
-       (def ~name
-         (doto app#
-           (App/synth))))))
+         ((fn ~args ~@body) app#)
+         (def ~name
+           (doto app#
+             (App/synth))))))

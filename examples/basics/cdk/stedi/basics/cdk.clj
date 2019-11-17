@@ -75,7 +75,7 @@ App/synth
 ;; A stack needs at least one resource Construct in order to be
 ;; deployable so lets add a bucket.
 
-(cdk/import ["@aws-cdk/aws-s3" Bucket])
+(cdk/import [[Bucket] :from "@aws-cdk/aws-s3"])
 
 ;; cdk-clj generates specs for and instruments all jsii constructors
 ;; and functions:

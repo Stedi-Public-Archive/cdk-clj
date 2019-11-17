@@ -1,7 +1,8 @@
 {:paths   ["src"]
  :deps    {org.clojure/clojure {:mvn/version "1.10.1"}
            uswitch/lambada     {:mvn/version "0.1.2"}}
- :aliases {:classes {:extra-paths ["classes"]}
+ :aliases {:cdk     {:main-opts ["-m" "stedi.cdk.main"]}
+           :classes {:extra-paths ["classes"]}
            :dev     {:extra-paths ["cdk"]
                      :extra-deps  {software.amazon.awscdk/s3     {:mvn/version "1.16.3.DEVPREVIEW"}
                                    software.amazon.awscdk/lambda {:mvn/version "1.16.3.DEVPREVIEW"}
