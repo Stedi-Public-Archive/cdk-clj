@@ -1,17 +1,37 @@
 on: [pull_request]
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: DeLaGuardo/clojure-lint-action@v1
+        with:
+          clj-kondo-args: --lint .
+          github_token: ${{ secrets.GITHUB_TOKEN }}
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      - name: Install Clojure
-        run: |
-          curl -O https://download.clojure.org/install/linux-install-1.10.1.469.sh
-          chmod +x linux-install-1.10.1.469.sh
-          sudo ./linux-install-1.10.1.469.sh
-      - name: Lint
-        run: |
-          clojure -A:dev:lint
-      - name: Run tests
-        run: |
-          clojure -A:dev:test
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/deps.edn') }}
+      - uses: actions/cache@v1
+        with:
+          path: ~/.gitlibs
+          key: ${{ runner.os }}-gitlibs-${{ hashFiles('**/deps.edn') }}
+      - uses: actions/cache@v1
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '10.x'
+      - run: npm install
+      - uses: actions/setup-java@v1
+        with:
+          java-version: '1.8'
+      - uses: DeLaGuardo/setup-clojure@2.0
+        with:
+          tools-deps: '1.10.1.469'
+      - run: clojure -A:dev:test

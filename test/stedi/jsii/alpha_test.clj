@@ -6,6 +6,7 @@
 (jsii/import-fqn "@aws-cdk/core.App" 'App)
 (jsii/import-fqn "@aws-cdk/core.Stack" 'Stack)
 (jsii/import-fqn "@aws-cdk/core.TagType" 'TagType)
+(jsii/import-fqn "@aws-cdk/aws-s3.Bucket" 'Bucket)
 
 (deftest jsii-class-test
   (let [C (jsii/get-class "@aws-cdk/core.Stack")]
@@ -60,6 +61,10 @@
   (testing "interned functions are instrumented"
     (is (.contains (str aws-cdk.core.App/synth)
                    "spec_checking_fn")))
+
+  (testing "map specs are closed"
+    (let [ex (is (thrown? Exception (Bucket (Stack) "bucket" {:does-not-exist "foo"})))]
+      (is (:clojure.spec.alpha/problems (ex-data ex)))))
 
   (testing "interned static functions have the correct arglists"
     (is (= '([x])

@@ -106,8 +106,13 @@
                                (map (partial prop-spec-k t)))
                          properties)]
     `(s/def ~(fqn/fqn->qualified-keyword fqn)
-       (s/keys :req-un ~req-un
-               :opt-un ~opt-un))))
+       (s/and (s/keys :req-un ~req-un
+                      :opt-un ~opt-un)
+              #(every? ~(into #{}
+                              (comp (map name)
+                                    (map keyword))
+                              (concat req-un opt-un))
+                       (keys %))))))
 
 (defn- method-arity-form
   [parameters]
