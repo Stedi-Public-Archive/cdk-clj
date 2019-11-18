@@ -81,12 +81,13 @@ npm install -g aws-cdk
   (AppStack this "my-app-dev" {}))
 ```
 
-4. Open up a REPL and evaluate the following form, which will create a
-   `cdk.json` file in the root of the project.
+4. From the command line run:
 
-``` clojure
-(require 'stedi.cdk.my-app)
+``` shell
+clj -A:dev -m stedi.cdk.main config --aliases dev
 ```
+
+This command will generate a `cdk.json` file which tells `cdk` how to enteract with cdk-clj.
 
 5. List your stacks to verify correct configuration:
 
