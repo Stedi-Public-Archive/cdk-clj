@@ -12,7 +12,8 @@
   []
   (->> (cp/classpath-directories)
        (ctn.find/find-namespaces)
-       (map #(do (require %) %))
+       (map #(try (require %) % (catch Exception _)))
+       (remove nil?)
        (doall)))
 
 (defn find-app

@@ -4,6 +4,7 @@
             [stedi.jsii.alpha :as jsii]))
 
 (jsii/import-fqn "@aws-cdk/core.App" 'App)
+(jsii/import-fqn "@aws-cdk/core.Reference" 'Reference)
 (jsii/import-fqn "@aws-cdk/core.Stack" 'Stack)
 (jsii/import-fqn "@aws-cdk/core.TagType" 'TagType)
 (jsii/import-fqn "@aws-cdk/aws-s3.Bucket" 'Bucket)
@@ -23,7 +24,10 @@
   (let [C (jsii/get-class "@aws-cdk/core.Stack")
         stack (C nil "my-stack")]
     (testing "objects extend ILookup for property access"
-      (is (= "my-stack" (:stackName stack))))))
+      (is (= "my-stack" (:stackName stack))))
+
+    (testing "toString"
+      (is (.contains (str (Reference "hello" (Stack))) "TOKEN")))))
 
 (deftest import-fqn-test
   (testing "refers a jsii primitive into the current namespace"

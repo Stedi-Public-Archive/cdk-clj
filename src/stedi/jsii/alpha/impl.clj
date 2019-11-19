@@ -67,7 +67,7 @@
   java.lang.Object
   (toString [this]
     (when (some (comp #{"toString"} :name)
-                (:methods (get-type-info this)))
+                (assm/methods fqn))
       (-invoke this {:op :toString})))
 
   json/JSONWriter
