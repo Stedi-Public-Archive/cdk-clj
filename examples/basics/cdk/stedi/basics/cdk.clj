@@ -2,15 +2,8 @@
   (:require [clojure.edn :as edn]
             [clojure.java.io :as io]
             [stedi.cdk.alpha :as cdk]
-            [uberdeps.api :as uberdeps]))
-
-;; CDK is a framework released by Amazon that allows developers to
-;; deploy CloudFormation-based infrastructure using their prefered
-;; language.
-
-;; It is built from TypeScript and made available to other languages
-;; through the JSii protocol by Amazon. JSii allows other languages to
-;; interact with JavaScript classes through an RPC protocol.
+            [uberdeps.api :as uberdeps]
+            [clojure.datafy :as d]))
 
 ;; cdk-clj wraps the JSii protocol for CDK classes in Clojure.
 
@@ -39,7 +32,7 @@ App
 
 ;; Invoking the class calls its constructor and returns a
 ;; jsii-instance:
-(def app (App))
+(def app (App {:outdir "cdk.out"}))
 
 ;; These constructor vars also have docstrings
 App
@@ -82,10 +75,6 @@ App/synth
 
 (comment
   (Bucket stack nil) ; Fails with spec error
-
-  ;; Worth noting that the CDK specs are closed
-
-  (Bucket stack "id" {:does-not-exist :foo}) ; Fails due to specs being closed
   )
 
 (def bucket (Bucket stack "bucket"))
@@ -93,7 +82,8 @@ App/synth
 ;; Buckets aren't particularly interesting, and lambdas + serverless
 ;; are all the rage so lets add a lambda function as well.
 
-(cdk/import [[Code Function Runtime] :from "@aws-cdk/aws-lambda"])
+(cdk/import [[Duration] :from "@aws-cdk/core"]
+            [[Code Function Runtime] :from "@aws-cdk/aws-lambda"])
 
 (defn- clean
   []
@@ -126,30 +116,48 @@ App/synth
              :handler     "stedi.cdk.basics.Hello"
              :runtime     (:JAVA_8 Runtime)               ;; Getting a static property
              :environment {"BUCKET" (:bucketName bucket)} ;; Getting an instance property
+             :timeout     (Duration/seconds 5)
+             :memorySize  2000
              }))
-
-(comment
-  ;; See it bound to the construct tree
-  (map (comp :path :node)
-       (get-in stack [:node :children]))
-  )
 
 ;; We can grant the function write access to the bucket using an
 ;; instance method
+(Bucket/grantReadWrite bucket my-fn)
 
-(Bucket/grantWrite bucket my-fn)
+;; Synthesize our application into the cdk.out directory for use with
+;; the CLI
+(App/synth app)
 
-;; CDK constructs often have functions for granting permissions,
-;; adding metrics and triggering events.
 
-;; This app can now be deployed using `cdk-cli` in a shell with AWS
-;; credentials configured.
 
-;; Synth:
-;; cdk synth
 
-;; Deploy:
-;; cdk deploy
 
-;; Destroy:
-;; cdk destroy
+
+
+
+
+
+
+
+
+
+
+
+(comment
+  ;; Demo Notes
+  (do
+    (cdk/browse) ;; root
+    (clojure.java.browse/browse-url "https://docs.aws.amazon.com/cdk/api/latest/docs/aws-construct-library.html") ;; constructs
+    (clojure.java.browse/browse-url "https://docs.aws.amazon.com/cdk/latest/guide/home.html") ;; developer guide
+    (cdk/browse app) ;; for app documentation
+    (clojure.java.browse/browse-url "https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks?filteringText=&filteringStatus=active&viewNested=true&hideStacks=false")
+    )
+
+  ;; synth basics:
+  ;; cdk --app cdk.out synth
+  ;; cdk --app cdk.out --profile tvanhens deploy
+  ;; aws --profile tvanhens lambda invoke --function-name  /dev/stdout
+
+  ;; synth depswatch:
+  ;; cdk --app cdk.out synth -e depswatch-prod
+  )

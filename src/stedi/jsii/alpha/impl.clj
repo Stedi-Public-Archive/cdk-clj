@@ -1,5 +1,6 @@
 (ns stedi.jsii.alpha.impl
   (:require [clojure.data.json :as json]
+            [clojure.core.protocols :as p]
             [clojure.walk :as walk]
             [stedi.jsii.alpha.assembly :as assm]
             [stedi.jsii.alpha.client :as client]
@@ -59,6 +60,14 @@
                               {:k           k
                                :valid-props valid-props})))]
       (->clj (client/get-property-value objId (name value)))))
+
+  p/Datafiable
+  (datafy [this]
+    (into {}
+          (map (juxt identity
+                     #(try (get this %)
+                           (catch Exception _ nil))))
+          (props this (complement :static))))
 
   Invocable
   (-invoke [_ {:keys [op args]}]

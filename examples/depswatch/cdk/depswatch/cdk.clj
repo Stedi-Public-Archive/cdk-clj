@@ -125,7 +125,9 @@
     (LambdaRestApi slack-hook "api" {:handler slack-hook})
     stack))
 
-(def app (App))
+(def app (App {:outdir "cdk.out"}))
 
 (AppStack app "depswatch-dev" {:timer? false})
 (AppStack app "depswatch-prod" {:timer? true})
+
+(App/synth app)
