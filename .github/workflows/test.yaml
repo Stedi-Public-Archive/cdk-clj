@@ -1,3 +1,4 @@
+name: lint-and-test
 on: [pull_request]
 jobs:
   lint:
