@@ -184,7 +184,7 @@ interfaces:
 
 ## Next Steps
 
-* Check out the [example project][4] to see the minimum setup required to get a
+* Check out the [example app][4] to see the minimum setup required to get a
   [Lambda][stedilambda] deployed behind API Gateway
 * Check out the [CDK API Docs][5] to see what modules are available and how to
   use them
@@ -216,7 +216,7 @@ See [LICENSE](LICENSE) for more information.
 [1]: https://github.com/aws/aws-cdk#aws-cloud-development-kit-aws-cdk
 [2]: https://github.com/aws/jsii
 [3]: https://docs.aws.amazon.com/cdk/api/latest/
-[4]: https://github.com/StediInc/cdk-clj/tree/master/examples/sampleapp
+[4]: https://github.com/StediInc/cdk-clj/tree/master/examples/basics
 [5]: https://docs.aws.amazon.com/cdk/api/latest/docs/aws-construct-library.html
 
 [apache-2]: https://www.apache.org/licenses/LICENSE-2.0
