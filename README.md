@@ -2,6 +2,8 @@
 
 [![GitHub Action Status](https://github.com/stediinc/cdk-clj/workflows/build/badge.svg)](https://github.com/stediinc/cdk-clj/actions)
 
+[#cdk-clj on Clojurians](https://clojurians.slack.com/archives/CQVV1N7QD)
+
 This library is a Clojure wrapper for [AWS Cloud Development Kit (AWS CDK)][1].
 
 This is an alpha release. We use this library internally and consider it
