@@ -109,24 +109,36 @@ App/synth
   (cdk/browse Function)
   )
 
-(def my-fn
+(cdk/import [[SecretValue] :from "@aws-cdk/core"])
+
+(def handler
   (Function stack
-            "my-fn"
+            "handler"
             {:code        (Code/fromAsset jarpath)        ;; Calling a static method
              :handler     "stedi.cdk.basics.Hello"
              :runtime     (:JAVA_8 Runtime)               ;; Getting a static property
-             :environment {"BUCKET" (:bucketName bucket)} ;; Getting an instance property
+             :environment {"BUCKET" (:bucketName bucket)  ;; Getting an instance property
+                           "SECRET" (str (SecretValue/secretsManager "conj-secret" {:jsonField "year"}))}
              :timeout     (Duration/seconds 5)
              :memorySize  2000
              }))
 
 ;; We can grant the function write access to the bucket using an
 ;; instance method
-(Bucket/grantReadWrite bucket my-fn)
+
+(Bucket/grantReadWrite bucket handler)
+
+;; Lastly, lets make this function available via API Gateway so we can
+;; curl it
+
+(cdk/import [[LambdaRestApi] :from "@aws-cdk/aws-apigateway"])
+
+(def api (LambdaRestApi stack "api" {:handler handler}))
 
 ;; Synthesize our application into the cdk.out directory for use with
 ;; the CLI
 (App/synth app)
+
 
 
 
@@ -160,4 +172,15 @@ App/synth
 
   ;; synth depswatch:
   ;; cdk --app cdk.out synth -e depswatch-prod
+
+  ;; Creating an alarm
+
+  (cdk/import [[Metric] :from "@aws-cdk/aws-cloudwatch"])
+
+  (Metric/createAlarm
+    (Function/metricErrors handler)
+    stack
+    "alarm"
+    {:threshold         1
+     :evaluationPeriods 1})
   )
