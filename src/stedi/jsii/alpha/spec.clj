@@ -14,8 +14,8 @@
         :int integer?
         :float float?
         :boolean boolean?
-        :vector (s/coll-of ::json-value :kind vector?)
-        :map (s/map-of ::string-like ::json-value)))
+        :vector (s/coll-of ::json :kind vector?)
+        :map (s/map-of ::string-like ::json)))
 
 (defn- metatype
   [{:keys [datatype kind]}]
