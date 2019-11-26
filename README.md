@@ -34,7 +34,7 @@ with minimal configuration.
 
 For a general introduction, watch the Clojure/Conj talk:
 
-[![Goodbye YAML: Infrastructure as Code in Clojure](https://img.youtube.com/vi/yruVUkwlffk/0.jpg)][video]
+[![Goodbye YAML: Infrastructure as Code in Clojure](https://img.youtube.com/vi/TbDmupZyuXk/0.jpg)][video]
 
 ## Prerequisites
 
@@ -233,4 +233,4 @@ See [LICENSE](LICENSE) for more information.
 [nodeenv]: https://github.com/ekalinin/nodeenv
 [stedilambda]: https://github.com/StediInc/lambda
 [maven-deps]: https://search.maven.org/search?q=software.amazon.awscdk
-[video]: https://www.youtube.com/watch?v=yruVUkwlffk
+[video]: https://www.youtube.com/watch?v=TbDmupZyuXk
