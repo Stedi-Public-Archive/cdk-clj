@@ -74,11 +74,10 @@ npm install -g aws-cdk
 
 ``` clojure
 (ns stedi.cdk.my-app
-  (:require [stedi.cdk.alpha :as cdk]
-            [stedi.my-app :as my-app]))
+  (:require [stedi.cdk.alpha :as cdk]))
 
 (cdk/import [[Stack] :from "@aws-cdk/core"]
-            [[Bucket] :from "@aws-cdk/aws-s3")
+            [[Bucket] :from "@aws-cdk/aws-s3"])
 
 (defn AppStack
   [scope id props]
