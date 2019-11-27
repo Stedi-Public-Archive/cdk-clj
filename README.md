@@ -63,7 +63,7 @@ npm install -g aws-cdk
 {:paths   ["src"]
  :deps    {org.clojure/clojure {:mvn/version "1.10.1"}}
  :aliases {:dev {:extra-paths ["cdk"]
-                 :extra-deps  {stedi/cdk-clj {:git/url "git@github.com:StediInc/cdk-clj.git"
+                 :extra-deps  {stedi/cdk-clj {:git/url "https://github.com/StediInc/cdk-clj.git"
                                               :sha     "<LATEST SHA HERE>"}
                                ;; Required in order to use the "@aws-cdk/aws-s3" module below
                                software.amazon.awscdk/s3 {:mvn/version "1.12.0.DEVPREVIEW"}
