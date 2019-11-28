@@ -47,6 +47,7 @@ For a general introduction, watch the Clojure/Conj talk:
 ## Quick Start
 
 0. Ensure you have configured appropriate [AWS Credentials][aws-creds].
+   The following commands assume a [default profile][aws-profile].
 
 1. Install `aws-cdk`:
 
@@ -226,6 +227,7 @@ See [LICENSE](LICENSE) for more information.
 
 [apache-2]: https://www.apache.org/licenses/LICENSE-2.0
 [aws-creds]: https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html
+[aws-profile]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html
 [cdk-cli]: https://docs.aws.amazon.com/cdk/latest/guide/tools.html
 [clojure]: https://clojure.org/guides/getting_started
 [jsii-404]: https://github.com/aws/jsii/blob/850f42bea4218f2563d221aff28926da16692f62/packages/jsii-java-runtime/project/src/main/java/software/amazon/jsii/JsiiRuntime.java#L220
