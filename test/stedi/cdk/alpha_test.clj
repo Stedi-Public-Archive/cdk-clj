@@ -26,45 +26,32 @@
             (StringParameter/fromStringParameterName s "param" "param-name")
             (Function/fromFunctionArn s "fn" "function-arn"))))))
 
+(defmacro with-url-spy
+  "Evaluates `form` in the context of a redefintion of browse-url, capturing the
+  arguments and returning them."
+  [form]
+  `(let [spy# (atom [])]
+     (with-redefs [clojure.java.browse/browse-url
+                   (fn [url#] (swap! spy# conj url#))]
+       (do ~form
+           (deref spy#)))))
+
 (deftest browse-test
   (testing "opening documentation with no arguments"
-    (let [spy (atom [])]
-      (with-redefs [clojure.java.browse/browse-url
-                    (fn [url] (swap! spy conj url))]
-        (cdk/browse)
-        (is (= ["https://docs.aws.amazon.com/cdk/api/latest"] @spy)))))
+    (is (= ["https://docs.aws.amazon.com/cdk/api/latest"]
+           (with-url-spy (cdk/browse)))))
   (testing "opening module documentation with full path"
-    (let [spy (atom [])]
-      (with-redefs [clojure.java.browse/browse-url
-                    (fn [url] (swap! spy conj url))]
-        (cdk/browse "@aws-cdk/core")
-        (is (= ["https://docs.aws.amazon.com/cdk/api/latest/docs/core-readme.html"]
-               @spy)))))
+    (is (= ["https://docs.aws.amazon.com/cdk/api/latest/docs/core-readme.html"]
+           (with-url-spy (cdk/browse "@aws-cdk/core")))))
   (testing "opening module documentation for `core`"
-    (let [spy (atom [])]
-      (with-redefs [clojure.java.browse/browse-url
-                    (fn [url] (swap! spy conj url))]
-        (cdk/browse "core")
-        (is (= ["https://docs.aws.amazon.com/cdk/api/latest/docs/core-readme.html"]
-               @spy)))))
+    (is (= ["https://docs.aws.amazon.com/cdk/api/latest/docs/core-readme.html"]
+           (with-url-spy (cdk/browse "core")))))
   (testing "opening fully qualified documentation for a class"
-    (let [spy (atom [])]
-      (with-redefs [clojure.java.browse/browse-url
-                    (fn [url] (swap! spy conj url))]
-        (cdk/browse "@aws-cdk/core.Stack")
-        (is (= ["https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html"]
-               @spy)))))
+    (is (= ["https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html"]
+           (with-url-spy (cdk/browse "@aws-cdk/core.Stack")))))
   (testing "opening documentation for a class"
-    (let [spy (atom [])]
-      (with-redefs [clojure.java.browse/browse-url
-                    (fn [url] (swap! spy conj url))]
-        (cdk/browse Stack)
-        (is (= ["https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html"]
-               @spy)))))
+    (is (= ["https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html"]
+           (with-url-spy (cdk/browse Stack)))))
   (testing "opening documentation for an instance"
-    (let [spy (atom [])]
-      (with-redefs [clojure.java.browse/browse-url
-                    (fn [url] (swap! spy conj url))]
-        (cdk/browse (Stack))
-        (is (= ["https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html"]
-               @spy))))))
+    (is (= ["https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html"]
+           (with-url-spy (cdk/browse (Stack)))))))
