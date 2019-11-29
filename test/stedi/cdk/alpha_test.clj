@@ -25,3 +25,33 @@
       (is (StringParameter/grantRead
             (StringParameter/fromStringParameterName s "param" "param-name")
             (Function/fromFunctionArn s "fn" "function-arn"))))))
+
+(defmacro with-url-spy
+  "Evaluates `form` in the context of a redefintion of browse-url, capturing the
+  arguments and returning them."
+  [form]
+  `(let [spy# (atom [])]
+     (with-redefs [clojure.java.browse/browse-url
+                   (fn [url#] (swap! spy# conj url#))]
+       (do ~form
+           (deref spy#)))))
+
+(deftest browse-test
+  (testing "opening documentation with no arguments"
+    (is (= ["https://docs.aws.amazon.com/cdk/api/latest"]
+           (with-url-spy (cdk/browse)))))
+  (testing "opening module documentation with full path"
+    (is (= ["https://docs.aws.amazon.com/cdk/api/latest/docs/core-readme.html"]
+           (with-url-spy (cdk/browse "@aws-cdk/core")))))
+  (testing "opening module documentation for `core`"
+    (is (= ["https://docs.aws.amazon.com/cdk/api/latest/docs/core-readme.html"]
+           (with-url-spy (cdk/browse "core")))))
+  (testing "opening fully qualified documentation for a class"
+    (is (= ["https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html"]
+           (with-url-spy (cdk/browse "@aws-cdk/core.Stack")))))
+  (testing "opening documentation for a class"
+    (is (= ["https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html"]
+           (with-url-spy (cdk/browse Stack)))))
+  (testing "opening documentation for an instance"
+    (is (= ["https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html"]
+           (with-url-spy (cdk/browse (Stack)))))))

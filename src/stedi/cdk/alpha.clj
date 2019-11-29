@@ -37,13 +37,12 @@
                      (str (string/replace fqn "@aws-cdk/" "")
                           "-readme"))]
                (format "%s/docs/%s.html" docs-prefix url-formatted-fqn)))]
-     (browse/browse-url
-       (cond
-         (string? obj-class-or-fqn)
-         (fqn->url obj-class-or-fqn)
+     (cond
+       (string? obj-class-or-fqn)
+       (browse/browse-url (fqn->url obj-class-or-fqn))
 
-         (jsii/jsii-primitive? obj-class-or-fqn)
-         (browse (jsii/fqn obj-class-or-fqn)))))))
+       (jsii/jsii-primitive? obj-class-or-fqn)
+       (browse (jsii/fqn obj-class-or-fqn))))))
 
 (s/def ::bindings
   (s/+
