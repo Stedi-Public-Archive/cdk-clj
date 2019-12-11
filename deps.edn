@@ -3,13 +3,13 @@
            org.clojure/data.json               {:mvn/version "0.2.6"}
            org.clojure/tools.cli               {:mvn/version "0.4.2"}
            org.clojure/tools.namespace         {:mvn/version "0.3.1"}
-           software.amazon.awscdk/core         {:mvn/version "1.16.3.DEVPREVIEW"}}
+           software.amazon.awscdk/core         {:mvn/version "1.18.0"}}
  :aliases {:dev  {:extra-paths ["test"]
                   :extra-deps  {clj-kondo                     {:mvn/version "2019.09.22-alpha"}
                                 com.cognitect/test-runner
                                 {:git/url "https://github.com/cognitect-labs/test-runner.git"
                                  :sha     "209b64504cb3bd3b99ecfec7937b358a879f55c1"}
-                                software.amazon.awscdk/lambda {:mvn/version "1.16.3.DEVPREVIEW"}}}
+                                software.amazon.awscdk/lambda {:mvn/version "1.18.0"}}}
            :lint {:main-opts ["-m" "clj-kondo.main" "--lint" "."]}
            :unit {:main-opts ["-m" "cognitect.test-runner" "--exclude" "integration"]}
            :test {:main-opts ["-m" "cognitect.test-runner"]}}}
