@@ -71,10 +71,10 @@ npm install -g aws-cdk
                                }}}}
 ```
 
-3. Create a CDK infrastructure file with the path `./cdk/stedi/cdk/my_app.clj`.
+3. Create a CDK infrastructure file with the path `./cdk/stedi/my_app/cdk.clj`.
 
 ``` clojure
-(ns stedi.cdk.my-app
+(ns stedi.my-app.cdk
   (:require [stedi.cdk.alpha :as cdk]))
 
 (cdk/import [[Stack] :from "@aws-cdk/core"]
@@ -85,17 +85,20 @@ npm install -g aws-cdk
   (let [stack (Stack scope id props)]
     (Bucket stack "my-bucket" {:versioned true})))
 
-(cdk/defapp app [this]
+(cdk/defapp app
+  [this]
   (AppStack this "my-app-dev" {}))
 ```
 
-4. From the command line run:
-
-``` shell
-clj -A:dev -m stedi.cdk.main config --aliases dev
+4. Create
+   [`cdk.json`](https://docs.aws.amazon.com/cdk/latest/guide/tools.html#cli) in
+   the root of your project to tell the CDK toolchain how to invoke the app:
+```json
+{"app":"clojure -A:dev -i cdk/stedi/my-app/cdk.clj"}
 ```
 
-This command will generate a `cdk.json` file which tells `cdk` how to enteract with cdk-clj.
+where the argument to `-i` is the path to the file in which the cdk-clj app is
+defined.
 
 5. List your stacks to verify correct configuration:
 
