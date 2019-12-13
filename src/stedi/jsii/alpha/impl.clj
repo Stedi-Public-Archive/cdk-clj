@@ -52,13 +52,7 @@
 (deftype JsiiObject [fqn interfaces objId]
   clojure.lang.ILookup
   (valAt [this k]
-    (let [valid-props (props this (complement :static))
-          value
-          (or (valid-props k)
-              (throw (ex-info "Invalid property"
-                              {:k           k
-                               :valid-props valid-props})))]
-      (->clj (client/get-property-value objId (name value)))))
+    (->clj (client/get-property-value objId (name k))))
 
   Invocable
   (-invoke [_ {:keys [op args]}]
@@ -97,13 +91,7 @@
 (deftype JsiiClass [fqn]
   clojure.lang.ILookup
   (valAt [this k]
-    (let [valid-props (props this :static)
-          value
-          (or (valid-props k)
-              (throw (ex-info "Invalid property"
-                              {:k           k
-                               :valid-props valid-props})))]
-      (->clj (client/get-static-property-value fqn (name value)))))
+    (->clj (client/get-static-property-value fqn (name k))))
 
   Invocable
   (-invoke [_ {:keys [op args]}]
