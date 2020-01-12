@@ -67,7 +67,7 @@ npm install -g aws-cdk
                  :extra-deps  {stedi/cdk-clj {:git/url "https://github.com/StediInc/cdk-clj.git"
                                               :sha     "<LATEST SHA HERE>"}
                                ;; Required in order to use the "@aws-cdk/aws-s3" module below
-                               software.amazon.awscdk/s3 {:mvn/version "1.20"}
+                               software.amazon.awscdk/s3 {:mvn/version "1.20.0"}
                                }}}}
 ```
 
