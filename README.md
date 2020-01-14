@@ -94,7 +94,7 @@ npm install -g aws-cdk
    [`cdk.json`](https://docs.aws.amazon.com/cdk/latest/guide/tools.html#cli) in
    the root of your project to tell the CDK toolchain how to invoke the app:
 ```json
-{"app":"clojure -A:dev -i cdk/stedi/my-app/cdk.clj"}
+{"app":"clojure -A:dev -i cdk/stedi/my_app/cdk.clj"}
 ```
 
 where the argument to `-i` is the path to the file in which the cdk-clj app is
