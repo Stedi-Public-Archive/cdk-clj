@@ -77,7 +77,7 @@
                (:arglists)))))
 
   (testing "interned instance functions have the correct arglists"
-    (is (= '([this stack] [this stack reason])
+    (is (= '([this target] [this target reason])
            (-> (resolve 'aws-cdk.core.Stack/addDependency)
                (meta)
                (:arglists))))))

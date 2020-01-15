@@ -52,9 +52,12 @@
 (defn create-object
   ([fqn initializer-args]
    (load-module fqn)
-   (-> (.createObject (client) fqn (map edn->json-node initializer-args))
-       (.toJson)
-       (json-node->edn))))
+   (let [initializer-args (map edn->json-node initializer-args)
+         overrides []
+         interfaces []]
+     (-> (.createObject (client) fqn initializer-args overrides interfaces)
+         (.toJson)
+         (json-node->edn)))))
 
 (defn delete-object
   [object-ref]

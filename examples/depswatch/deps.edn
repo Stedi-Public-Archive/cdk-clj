@@ -10,10 +10,10 @@
 
                                    uberdeps {:mvn/version "0.1.6"}
 
-                                   software.amazon.awscdk/apigateway          {:mvn/version "1.16.3.DEVPREVIEW"}
-                                   software.amazon.awscdk/dynamodb            {:mvn/version "1.16.3.DEVPREVIEW"}
-                                   software.amazon.awscdk/events              {:mvn/version "1.16.3.DEVPREVIEW"}
-                                   software.amazon.awscdk/events-targets      {:mvn/version "1.16.3.DEVPREVIEW"}
-                                   software.amazon.awscdk/lambda              {:mvn/version "1.16.3.DEVPREVIEW"}
-                                   software.amazon.awscdk/stepfunctions       {:mvn/version "1.16.3.DEVPREVIEW"}
-                                   software.amazon.awscdk/stepfunctions-tasks {:mvn/version "1.16.3.DEVPREVIEW"}}}}}
+                                   software.amazon.awscdk/apigateway          {:mvn/version "1.20.0"}
+                                   software.amazon.awscdk/dynamodb            {:mvn/version "1.20.0"}
+                                   software.amazon.awscdk/events              {:mvn/version "1.20.0"}
+                                   software.amazon.awscdk/events-targets      {:mvn/version "1.20.0"}
+                                   software.amazon.awscdk/lambda              {:mvn/version "1.20.0"}
+                                   software.amazon.awscdk/stepfunctions       {:mvn/version "1.20.0"}
+                                   software.amazon.awscdk/stepfunctions-tasks {:mvn/version "1.20.0"}}}}}
