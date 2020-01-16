@@ -1,3 +1,11 @@
+# Current Status
+
+After developing and using this Clojure wrapper for [AWS CDK][1] for the past
+six months, we've decided to use TypeScript and AWS' library directly. We are
+discontinuing maintenance moving forward. If a member of the community would
+like to volunteer for future maintenance, please file an issue or reach out
+directly to discuss a possible transfer.
+
 # cdk-clj
 
 [![GitHub Action Status](https://github.com/stediinc/cdk-clj/workflows/build/badge.svg)](https://github.com/stediinc/cdk-clj/actions)
