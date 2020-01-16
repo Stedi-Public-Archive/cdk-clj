@@ -1,4 +1,4 @@
-# Current Status
+# Current Status (January 16, 2020)
 
 After developing and using this Clojure wrapper for [AWS CDK][1] for the past
 six months, we've decided to use TypeScript and AWS' library directly. We are
